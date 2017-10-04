@@ -49,9 +49,15 @@ abstract class StockExchange implements Exchange
 	public function api_request($method, array $params = [])
 	{
 		$uri = $this->uri_construct($method, $params);
-        $client = new Client();
-        $request = $client->request('GET', $uri, ['http_errors' => false]);
-        $response = $request->getBody()->getContents();
+
+		try {
+			$client = new Client();
+			$request = $client->request('GET', $uri, ['http_errors' => false]);
+			$response = $request->getBody()->getContents();
+		} catch (\Exception $e) {
+			$response = false;
+		}
+
 
 		return $response;
 	}
