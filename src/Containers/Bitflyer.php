@@ -86,18 +86,31 @@ class Bitflyer extends StockExchange
     }
 
     /**
-     * Return price of pair
-     *
      * @param string $first_currency
      * @param string $second_currency
-     * @return null|float
+     * @return string|array
      */
-    public function getPairPrice($first_currency = 'BTC', $second_currency = 'USD')
+    public function getPairPriceUrl($first_currency = 'BTC', $second_currency = 'USDT')
     {
         $product_code = $first_currency . '_' . $second_currency;
 
-        $responseJSON = $this->api_request('getticker', compact('product_code'));
-        $response = json_decode($responseJSON, true);
+        return [
+            'uri' => "getticker",
+            'params' => compact('product_code'),
+        ];
+    }
+
+    /**
+     * Get price from response
+     *
+     * @param $response
+     * @param $first_currency
+     * @param $second_currency
+     * @return float|null
+     */
+    public function getPairPriceHandle($response, $first_currency, $second_currency)
+    {
+        $response = json_decode($response, true);
 
         if (isset($response['error_message'])) {
             return null;
