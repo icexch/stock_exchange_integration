@@ -109,6 +109,40 @@ class Okcoin extends StockExchange
     }
 
     /**
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return string|array
+     */
+    public function getPairPriceUrl($first_currency = 'BTC', $second_currency = 'USDT')
+    {
+        $data['symbol'] = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => "ticker.do",
+            'params' => $data,
+        ];
+    }
+
+    /**
+     * Get price from response
+     *
+     * @param $response
+     * @param $first_currency
+     * @param $second_currency
+     * @return float|null
+     */
+    public function getPairPriceHandle($response, $first_currency, $second_currency)
+    {
+        $response = json_decode($response, true);
+
+        if (isset($response['error_code'])) {
+            return null;
+        }
+
+        return (float) $response['ticker']['last'];
+    }
+
+    /**
      * Get chart data
      *
      * data format: [[timestamp, high, low, open, close, advancedData]]

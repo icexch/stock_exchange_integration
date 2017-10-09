@@ -66,17 +66,31 @@ class Bittrex extends StockExchange
     }
 
     /**
-     * Get pair price
-     *
      * @param string $first_currency
      * @param string $second_currency
-     * @return float|null
+     * @return string|array
      */
-    public function getPairPrice($first_currency = 'BTC', $second_currency = 'USD')
+    public function getPairPriceUrl($first_currency = 'BTC', $second_currency = 'USDT')
     {
         $market = $this->getPair($first_currency, $second_currency);
-        $responseJSON = $this->api_request('getticker', compact('market'));
-        $response = json_decode($responseJSON, true);
+
+        return [
+            'uri' => "getticker",
+            'params' => compact('market'),
+        ];
+    }
+
+    /**
+     * Get price from response
+     *
+     * @param $response
+     * @param $first_currency
+     * @param $second_currency
+     * @return float|null
+     */
+    public function getPairPriceHandle($response, $first_currency, $second_currency)
+    {
+        $response = json_decode($response, true);
 
         if (!$response || $response['success'] !== true) {
             return null;

@@ -82,6 +82,35 @@ class Bithumb extends StockExchange
         return (float) $response['data']['sell_price'];
     }
 
+    /**
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return string
+     */
+    public function getPairPriceUrl($first_currency = 'BTC', $second_currency = 'USDT')
+    {
+        return 'ticker/' . $first_currency;
+    }
+
+    /**
+     * Get price from response
+     *
+     * @param $response
+     * @param $first_currency
+     * @param $second_currency
+     * @return float|null
+     */
+    public function getPairPriceHandle($response, $first_currency, $second_currency)
+    {
+        $response = json_decode($response, true);
+
+        if ($response['status'] !== "0000") {
+            return null;
+        }
+
+        return (float) $response['data']['sell_price'];
+    }
+
     public function getChartData($first_currency = 'BTC', $second_currency = 'USD')
     {
         return null;

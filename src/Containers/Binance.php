@@ -46,16 +46,26 @@ class Binance extends StockExchange
     }
 
     /**
-     * Get pair price
-     *
      * @param string $first_currency
      * @param string $second_currency
+     * @return string
+     */
+    public function getPairPriceUrl($first_currency = 'BTC', $second_currency = 'USDT')
+    {
+        return "ticker/allPrices";
+    }
+
+    /**
+     * Get price from response
+     *
+     * @param $response
+     * @param $first_currency
+     * @param $second_currency
      * @return float|null
      */
-    public function getPairPrice($first_currency = 'BTC', $second_currency = 'USDT')
+    public function getPairPriceHandle($response, $first_currency, $second_currency)
     {
-        $responseJSON = $this->api_request("ticker/allPrices");
-        $response = json_decode($responseJSON, true);
+        $response = json_decode($response, true);
 
         if (!$response) {
             return null;

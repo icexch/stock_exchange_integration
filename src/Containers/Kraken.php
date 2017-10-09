@@ -171,24 +171,37 @@ class Kraken extends StockExchange
     }
 
     /**
-     * Return price of pair
-     *
      * @param string $first_currency
      * @param string $second_currency
-     * @return null|float
+     * @return string|array
      */
-    public function getPairPrice($first_currency = 'BCH', $second_currency = 'USD')
+    public function getPairPriceUrl($first_currency = 'BTC', $second_currency = 'USDT')
     {
         $pair = $this->getPair($first_currency, $second_currency);
 
-        $tickerJSON = $this->api_request('Ticker', compact('pair'));
-        $ticker = json_decode($tickerJSON, true);
+        return [
+            'uri' => "Ticker",
+            'params' => compact('pair'),
+        ];
+    }
 
-        if ($ticker['error'] != []) {
+    /**
+     * Get price from response
+     *
+     * @param $response
+     * @param $first_currency
+     * @param $second_currency
+     * @return float|null
+     */
+    public function getPairPriceHandle($response, $first_currency, $second_currency)
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || $response['error'] != []) {
             return null;
         }
 
-        foreach ($ticker['result'] as $item) {
+        foreach ($response['result'] as $item) {
             return (float) $item['c'][0];
         }
     }

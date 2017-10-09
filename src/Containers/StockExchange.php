@@ -4,6 +4,7 @@ namespace Warchiefs\StockExchangeIntegration\Containers;
 
 use Warchiefs\StockExchangeIntegration\Contracts\StockExchange as Exchange;
 use GuzzleHttp\Client;
+use App\RollingCurlX;
 
 /**
  * Parent class for StockExchange
@@ -19,6 +20,12 @@ abstract class StockExchange implements Exchange
     /*Currency return instead USD*/
 	protected $fiat = null;
 	protected $onlyFiat = false;
+
+	protected static $prices;
+
+	public $fiatsExchanges = [
+	    'bithumb', 'btc38', 'coinone', 'huobi', 'korbit', 'okcoincn', 'zaif',
+    ];
 
 	/**
 	 * Counstruct an url for api request
@@ -49,18 +56,37 @@ abstract class StockExchange implements Exchange
 	public function api_request($method, array $params = [])
 	{
 		$uri = $this->uri_construct($method, $params);
+        $client = new Client();
+        try {
+            $request = $client->request('GET', $uri, [
+                'http_errors' => false,
+                'timeout' => 6,
+            ]);
+        } catch (\GuzzleHttp\Exception\ConnectException $e) {
+            return null;
+        }
 
-		try {
-			$client = new Client();
-			$request = $client->request('GET', $uri, ['http_errors' => false]);
-			$response = $request->getBody()->getContents();
-		} catch (\Exception $e) {
-			$response = false;
-		}
-
+        $response = $request->getBody()->getContents();
 
 		return $response;
 	}
+
+    /**
+     * @param $method
+     * @param array $params
+     * @return Promise\PromiseInterface
+     */
+    public function api_request_async($method, array $params = [])
+    {
+        $uri = $this->uri_construct($method, $params);
+        $client = new Client();
+        $promise = $client->requestAsync('GET', $uri, [
+            'http_errors' => false,
+            'timeout' => 3,
+        ]);
+
+        return $promise;
+    }
 
     /**
      * Get array of prices
@@ -99,6 +125,65 @@ abstract class StockExchange implements Exchange
                 $prices[$exchangeName] = $price;
             }
         }
+
+        return $prices;
+    }
+
+    /**
+     * @param string $first_currency
+     * @param string $second_currency
+     * @param null $convertCallback
+     * @param null $only
+     * @return mixed
+     */
+    public function getAllPricesAsync($first_currency = 'BTC', $second_currency = 'USD', $convertCallback = null, $only = null)
+    {
+        $containers = self::getExchangeContainers($only);
+
+        $rcx = new RollingCurlX(20);
+        $rcx->setTimeout(8000);
+        $options = [CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"];
+        foreach ($containers as $exchangeName => $container) {
+            if (is_array($only)) {
+                if (!in_array($exchangeName, $only)) {
+                    continue;
+                }
+            }
+            if ($container->isOnlyFiat() && $second_currency !== 'USD') {
+                continue;
+            }
+            $requestUrl = $container->getPairPriceUrl($first_currency, $second_currency);
+            if (is_array($requestUrl)) {
+                $url = $container->uri_construct($requestUrl['uri'], $requestUrl['params']);
+            } else {
+                $url = $container->uri_construct($requestUrl);
+            }
+
+            $rcx->addRequest(
+                $url,
+                null,
+                function($response, $url, $request_info, $user_data, $time) use ($container, $first_currency, $second_currency, $convertCallback, $exchangeName) {
+                    $price = $container->getPairPriceHandle($response, $first_currency, $second_currency);
+                    if ($price && $second_currency === 'USD' && $fiatCurrency = $container->isFiat()) {
+                        if (is_callable($convertCallback)) {
+                            $price = $convertCallback($fiatCurrency, $price);
+                        }
+                    }
+
+                    if ($price) {
+                        self::$prices[$exchangeName] = $price;
+                    }
+                },
+                null,
+                $options,
+                null
+            );
+        }
+
+        $rcx->execute();
+
+        $prices = self::$prices;
+        self::$prices = [];
 
         return $prices;
     }
@@ -152,7 +237,7 @@ abstract class StockExchange implements Exchange
      *
      * @return array
      */
-    protected static function getExchangeContainers()
+    protected static function getExchangeContainers($only = null)
     {
         if (!($availableStocks = config('exchange.available'))) {
             $config = require_once('../Config/exchange.php');
@@ -162,6 +247,11 @@ abstract class StockExchange implements Exchange
         $containers = [];
 
         foreach ($availableStocks as $stock) {
+            if (is_array($only)) {
+                if (!in_array($stock, $only)) {
+                    continue;
+                }
+            }
             $class = __NAMESPACE__  . '\\' . ucfirst($stock);
             if (!class_exists($class)) {
                 continue;
@@ -170,6 +260,26 @@ abstract class StockExchange implements Exchange
         }
 
         return $containers;
+    }
+
+    /**
+     * Get pair price
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return float|null
+     */
+    public function getPairPrice($first_currency = 'BTC', $second_currency = 'USDT')
+    {
+        $url = $this->getPairPriceUrl($first_currency, $second_currency);
+
+        if (is_array($url)) {
+            $response = $this->api_request($url['uri'], $url['params']);
+        } else {
+            $response = $this->api_request($url);
+        }
+
+        return $this->getPairPriceHandle($response, $first_currency, $second_currency);
     }
 
     /**
