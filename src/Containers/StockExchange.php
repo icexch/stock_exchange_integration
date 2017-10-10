@@ -4,7 +4,7 @@ namespace Warchiefs\StockExchangeIntegration\Containers;
 
 use Warchiefs\StockExchangeIntegration\Contracts\StockExchange as Exchange;
 use GuzzleHttp\Client;
-use App\RollingCurlX;
+use marcushat\RollingCurlX;
 
 /**
  * Parent class for StockExchange
