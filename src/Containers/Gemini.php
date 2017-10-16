@@ -110,4 +110,114 @@ class Gemini extends StockExchange
     {
         return strtolower($first_currency . $second_currency);
     }
+
+    /**
+     * Get last trade data url
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return string
+     */
+    public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "trades/{$pair}";
+    }
+
+    /**
+     * Get last trade data handle
+     *
+     * @param string $response
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return float|null
+     */
+    public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['result'])) {
+            return null;
+        }
+
+        $sum = round($response[0]['price'] * $response[0]['amount'], 8);
+        $volume = (float) $response[0]['amount'];
+
+        return compact('sum', 'volume');
+    }
+
+    /**
+     * Get total volume url
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return null|float
+     */
+    public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "pubticker/{$pair}";
+    }
+
+    /**
+     * Get total volume handle
+     *
+     * @param string $response
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return null|float
+     */
+    public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['result'])) {
+            return null;
+        }
+
+        return (float) $response['volume'][$first_currency];
+    }
+
+    /**
+     * get total demand and offer
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return string
+     */
+    public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "book/{$pair}";
+    }
+
+    /**
+     * get total demand and offer
+     *
+     * @param string $response
+     * @return float|null
+     */
+    public function getTotalDemandAndOfferHandle($response)
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['result'])) {
+            return null;
+        }
+
+        $totalDemand = 0;
+
+        foreach ($response['asks'] as $ask) {
+            $totalDemand += $ask['price'] * $ask['amount'];
+        }
+
+        $offersAmounts = array_column($response['bids'], 'amount');
+
+        $totalOffer = array_sum($offersAmounts);
+
+        return compact('totalDemand', 'totalOffer');
+    }
 }

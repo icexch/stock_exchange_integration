@@ -13,7 +13,6 @@ use marcushat\RollingCurlX;
  */
 abstract class StockExchange implements Exchange
 {
-
 	protected $api_uri;
 	protected $client;
 
@@ -22,10 +21,7 @@ abstract class StockExchange implements Exchange
 	protected $onlyFiat = false;
 
 	protected static $prices;
-
-	public $fiatsExchanges = [
-	    'bithumb', 'btc38', 'coinone', 'huobi', 'korbit', 'okcoincn', 'zaif',
-    ];
+	protected static $buffer;
 
 	/**
 	 * Counstruct an url for api request
@@ -70,23 +66,6 @@ abstract class StockExchange implements Exchange
 
 		return $response;
 	}
-
-    /**
-     * @param $method
-     * @param array $params
-     * @return Promise\PromiseInterface
-     */
-    public function api_request_async($method, array $params = [])
-    {
-        $uri = $this->uri_construct($method, $params);
-        $client = new Client();
-        $promise = $client->requestAsync('GET', $uri, [
-            'http_errors' => false,
-            'timeout' => 3,
-        ]);
-
-        return $promise;
-    }
 
     /**
      * Get array of prices
@@ -134,14 +113,15 @@ abstract class StockExchange implements Exchange
      * @param string $second_currency
      * @param null $convertCallback
      * @param null $only
+     * @param int $timeout
      * @return mixed
      */
-    public function getAllPricesAsync($first_currency = 'BTC', $second_currency = 'USD', $convertCallback = null, $only = null)
+    public function getAllPricesAsync($first_currency = 'BTC', $second_currency = 'USD', $convertCallback = null, $only = null, $timeout = 3000)
     {
         $containers = self::getExchangeContainers($only);
 
         $rcx = new RollingCurlX(20);
-        $rcx->setTimeout(8000);
+        $rcx->setTimeout($timeout);
         $options = [CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"];
         foreach ($containers as $exchangeName => $container) {
             if (is_array($only)) {
@@ -189,6 +169,116 @@ abstract class StockExchange implements Exchange
     }
 
     /**
+     * @param string $first_currency
+     * @param string $second_currency
+     * @param null $convertCallback
+     * @param null $only
+     * @param int $timeout
+     * @return mixed
+     */
+    public function getCoinDataAsync($first_currency = 'BTC', $second_currency = 'USD', $convertCallback = null, $only = null, $timeout = 3000)
+    {
+        $containers = self::getExchangeContainers($only);
+
+        $rcx = new RollingCurlX(30);
+        $rcx->setTimeout($timeout);
+        $options = [CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"];
+        foreach ($containers as $exchangeName => $container) {
+            if (is_array($only)) {
+                if (!in_array($exchangeName, $only)) {
+                    continue;
+                }
+            }
+            if ($container->isOnlyFiat() && $second_currency !== 'USD') {
+                continue;
+            }
+            $lastTradeDataUrl = $container->getLastTradeDataUrl($first_currency, $second_currency);
+            if (is_array($lastTradeDataUrl)) {
+                $url = $container->uri_construct($lastTradeDataUrl['uri'], $lastTradeDataUrl['params']);
+            } else {
+                $url = $container->uri_construct($lastTradeDataUrl);
+            }
+
+            $rcx->addRequest(
+                $url,
+                null,
+                function($response, $url, $request_info, $user_data, $time) use ($container, $first_currency, $second_currency, $convertCallback, $exchangeName) {
+                    $data = $container->getLastTradeDataHandle($response, $first_currency, $second_currency);
+                    $sum = $data['sum'];
+                    if ($data && $second_currency === 'USD' && $fiatCurrency = $container->isFiat()) {
+                        if (is_callable($convertCallback)) {
+                            $sum = $convertCallback($fiatCurrency, $sum);
+                        }
+                    }
+                    if ($sum) {
+                        $data['sum'] = $sum;
+                    }
+                    self::$buffer[$exchangeName]['lastTradeData'] = $data;
+                },
+                null,
+                $options,
+                null
+            );
+
+            $totalVolumeUrl = $container->getTotalVolumeUrl($first_currency, $second_currency);
+            if (is_array($totalVolumeUrl)) {
+                $url = $container->uri_construct($totalVolumeUrl['uri'], $totalVolumeUrl['params']);
+            } else {
+                $url = $container->uri_construct($totalVolumeUrl);
+            }
+
+            $rcx->addRequest(
+                $url,
+                null,
+                function($response, $url, $request_info, $user_data, $time) use ($container, $first_currency, $second_currency, $convertCallback, $exchangeName) {
+                    $volume = $container->getTotalVolumeHandle($response, $first_currency, $second_currency);
+                    self::$buffer[$exchangeName]['totalVolume'] = $volume;
+                },
+                null,
+                $options,
+                null
+            );
+
+            $totalDemandAndOfferUrl = $container->getTotalDemandAndOfferUrl($first_currency, $second_currency);
+
+            if (is_array($totalDemandAndOfferUrl)) {
+                $url = $container->uri_construct($totalDemandAndOfferUrl['uri'], $totalDemandAndOfferUrl['params']);
+            } else {
+                $url = $container->uri_construct($totalDemandAndOfferUrl);
+            }
+
+            $rcx->addRequest(
+                $url,
+                null,
+                function($response, $url, $request_info, $user_data, $time) use ($container, $first_currency, $second_currency, $convertCallback, $exchangeName) {
+                    $data = $container->getTotalDemandAndOfferHandle($response, $first_currency, $second_currency);
+                    $demand = $data['totalDemand'];
+                    if ($data && $second_currency === 'USD' && $fiatCurrency = $container->isFiat()) {
+                        if (is_callable($convertCallback)) {
+                            $demand = $convertCallback($fiatCurrency, $demand);
+                        }
+                    }
+                    if ($demand) {
+                        $data['totalDemand'] = $demand;
+                    }
+                    self::$buffer[$exchangeName]['totalDemandUsd'] = round($data['totalDemand'], 8);
+                    self::$buffer[$exchangeName]['totalOffer'] = $data['totalOffer'];
+                },
+                null,
+                $options,
+                null
+            );
+        }
+
+        $rcx->execute();
+
+        $buffer = self::$buffer;
+        self::$buffer = [];
+
+        return $buffer;
+    }
+
+    /**
      * Return avg of pair from all stock exchanges
      *
      * @param string $first_currency
@@ -232,9 +322,11 @@ abstract class StockExchange implements Exchange
         return $coinsAll;
     }
 
+
     /**
      * Get array of exchange containers
      *
+     * @param null|array $only
      * @return array
      */
     protected static function getExchangeContainers($only = null)
@@ -269,7 +361,7 @@ abstract class StockExchange implements Exchange
      * @param string $second_currency
      * @return float|null
      */
-    public function getPairPrice($first_currency = 'BTC', $second_currency = 'USDT')
+    public function getPairPrice($first_currency = 'BTC', $second_currency = 'USD')
     {
         $url = $this->getPairPriceUrl($first_currency, $second_currency);
 
@@ -280,6 +372,66 @@ abstract class StockExchange implements Exchange
         }
 
         return $this->getPairPriceHandle($response, $first_currency, $second_currency);
+    }
+
+    /**
+     * Get last trade data
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return array
+     */
+    public function getLastTradeData($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $url = $this->getLastTradeDataUrl($first_currency, $second_currency);
+
+        if (is_array($url)) {
+            $response = $this->api_request($url['uri'], $url['params']);
+        } else {
+            $response = $this->api_request($url);
+        }
+
+        return $this->getLastTradeDataHandle($response, $first_currency, $second_currency);
+    }
+
+    /**
+     * Get total volume
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return null|float
+     */
+    public function getTotalVolume($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $url = $this->getTotalVolumeUrl($first_currency, $second_currency);
+
+        if (is_array($url)) {
+            $response = $this->api_request($url['uri'], $url['params']);
+        } else {
+            $response = $this->api_request($url);
+        }
+
+        return $this->getTotalVolumeHandle($response, $first_currency, $second_currency);
+    }
+
+    /**
+     * Get total demand and offer
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return array
+     */
+    public function getTotalDemandAndOffer($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $url = $this->getTotalDemandAndOfferUrl($first_currency, $second_currency);
+
+        if (is_array($url)) {
+            $response = $this->api_request($url['uri'], $url['params']);
+        } else {
+            $response = $this->api_request($url);
+        }
+
+        return $this->getTotalDemandAndOfferHandle($response);
     }
 
     /**

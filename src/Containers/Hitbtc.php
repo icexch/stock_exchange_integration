@@ -35,6 +35,8 @@ class Hitbtc extends StockExchange
         $data['from'] = $from;
         $data['by'] = $by;
         $data['start_index'] = $start_index;
+        $data['format_item'] = 'object';
+        $data['sort'] = 'desc';
 
         $pair = $this->getPair($first_currency, $second_currency);
         $responseJSON = $this->api_request("{$pair}/trades", $data);
@@ -130,5 +132,125 @@ class Hitbtc extends StockExchange
         }
 
         return $first_currency . $second_currency;
+    }
+
+    /**
+     * Get last trade data url
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return array
+     */
+    public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        $data = [];
+        $data['from'] = 0;
+        $data['by'] = 'timestamp';
+        $data['start_index'] = 0;
+        $data['format_item'] = 'object';
+        $data['sort'] = 'desc';
+
+        return [
+            'uri' => "{$pair}/trades",
+            'params' => $data,
+        ];
+    }
+
+    /**
+     * Get last trade data handle
+     *
+     * @param string $response
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return float|null
+     */
+    public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['error'])) {
+            return null;
+        }
+
+        $sum = round($response['trades'][0]['price'] * $response['trades'][0]['amount'], 8);
+        $volume = (float) $response['trades'][0]['amount'];
+
+        return compact('sum', 'volume');
+    }
+
+    /**
+     * Get total volume url
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return null|float
+     */
+    public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "{$pair}/ticker";
+    }
+
+    /**
+     * Get total volume handle
+     *
+     * @param string $response
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return null|float
+     */
+    public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['error'])) {
+            return null;
+        }
+
+        return (float) $response['volume_quote'];
+    }
+
+    /**
+     * get total demand and offer
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return string
+     */
+    public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "{$pair}/orderbook";
+    }
+
+    /**
+     * get total demand and offer
+     *
+     * @param string $response
+     * @return float|null
+     */
+    public function getTotalDemandAndOfferHandle($response)
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['error'])) {
+            return null;
+        }
+
+        $totalDemand = 0;
+
+        foreach ($response['asks'] as $ask) {
+            $totalDemand += $ask[0] * $ask[1];
+        }
+
+        $offersAmounts = array_column($response['bids'], 1);
+
+        $totalOffer = array_sum($offersAmounts);
+
+        return compact('totalDemand', 'totalOffer');
     }
 }

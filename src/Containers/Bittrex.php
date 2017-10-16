@@ -126,4 +126,124 @@ class Bittrex extends StockExchange
 
         return $second_currency . '-' . $first_currency;
     }
+
+    /**
+     * Get last trade data url
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return array
+     */
+    public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $market = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => 'getmarkethistory',
+            'params' => compact('market'),
+        ];
+    }
+
+    /**
+     * Get last trade data handle
+     *
+     * @param string $response
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return array
+     */
+    public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || $response['success'] !== true) {
+            return null;
+        }
+
+        $sum = $response['result'][0]['Total'];
+        $volume = $response['result'][0]['Quantity'];
+
+        return compact('sum', 'volume');
+    }
+
+    /**
+     * Get total volume url
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return array
+     */
+    public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $market = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => 'getmarketsummary',
+            'params' => compact('market'),
+        ];
+    }
+
+    /**
+     * Get total volume handle
+     *
+     * @param string $response
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return null|float
+     */
+    public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || $response['success'] !== true) {
+            return null;
+        }
+
+        return $response['result'][0]['Volume'];
+    }
+
+    /**
+     * get total demand and offer
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return array
+     */
+    public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $market = $this->getPair($first_currency, $second_currency);
+        $type = 'both';
+
+        return [
+            'uri' => 'getorderbook',
+            'params' => compact('market', 'type'),
+        ];
+    }
+
+    /**
+     * get total demand and offer
+     *
+     * @param string $response
+     * @return float|null
+     */
+    public function getTotalDemandAndOfferHandle($response)
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || $response['success'] !== true) {
+            return null;
+        }
+
+        $totalDemand = 0;
+
+        foreach ($response['result']['buy'] as $ask) {
+            $totalDemand += $ask['Rate'] * $ask['Quantity'];
+        }
+
+        $offersAmounts = array_column($response['result']['sell'], 'Quantity');
+
+        $totalOffer = array_sum($offersAmounts);
+
+        return compact('totalDemand', 'totalOffer');
+    }
 }

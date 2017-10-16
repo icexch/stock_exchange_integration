@@ -115,4 +115,108 @@ class Bithumb extends StockExchange
     {
         return null;
     }
+
+    /**
+     * Get last trade data url
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return string
+     */
+    public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        return 'recent_transactions/' . $first_currency;
+    }
+
+    /**
+     * Get last trade data handle
+     *
+     * @param string $response
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return float|null
+     */
+    public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $response = json_decode($response, true);
+
+        if ($response['status'] !== "0000") {
+            return null;
+        }
+
+        $sum = (float) $response['data'][0]['total'];
+        $volume = (float) $response['data'][0]['units_traded'];
+
+        return compact('sum', 'volume');
+    }
+
+    /**
+     * Get total volume url
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return string
+     */
+    public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        return 'ticker/' . $first_currency;
+    }
+
+    /**
+     * Get total volume handle
+     *
+     * @param string $response
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return null|float
+     */
+    public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $response = json_decode($response, true);
+
+        if ($response['status'] !== "0000") {
+            return null;
+        }
+
+        return (float) $response['data']['volume_1day'];
+    }
+
+    /**
+     * get total demand and offer
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return string
+     */
+    public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        return 'orderbook/' . $first_currency;
+    }
+
+    /**
+     * get total demand and offer
+     *
+     * @param string $response
+     * @return float|null
+     */
+    public function getTotalDemandAndOfferHandle($response)
+    {
+        $response = json_decode($response, true);
+
+        if ($response['status'] !== "0000") {
+            return null;
+        }
+
+        $totalDemand = 0;
+
+        foreach ($response['data']['asks'] as $ask) {
+            $totalDemand += $ask['price'] * $ask['quantity'];
+        }
+
+        $offersAmounts = array_column($response['data']['bids'], 'quantity');
+
+        $totalOffer = array_sum($offersAmounts);
+
+        return compact('totalDemand', 'totalOffer');
+    }
 }

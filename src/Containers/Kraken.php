@@ -217,4 +217,133 @@ class Kraken extends StockExchange
 
         return $first_currency . $second_currency;
     }
+
+    /**
+     * Get last trade data url
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return array
+     */
+    public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => "Trades",
+            'params' => compact('pair'),
+        ];
+    }
+
+    /**
+     * Get last trade data handle
+     *
+     * @param string $response
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return float|null
+     */
+    public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || $response['error'] != []) {
+            return null;
+        }
+
+        foreach ($response['result'] as $item) {
+            $trade = $item;
+            break;
+        }
+
+        $lastTrade = $trade[count($trade) - 1];
+
+        $sum = round($lastTrade[0] * $lastTrade[1], 8);
+        $volume = (float) $lastTrade[1];
+
+        return compact('sum', 'volume');
+    }
+
+    /**
+     * Get total volume url
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return array
+     */
+    public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => "Ticker",
+            'params' => compact('pair'),
+        ];
+    }
+
+    /**
+     * Get total volume handle
+     *
+     * @param string $response
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return null|float
+     */
+    public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || $response['error'] != []) {
+            return null;
+        }
+
+        foreach ($response['result'] as $item) {
+            return (float) $item['v'][1];
+        }
+    }
+
+    /**
+     * get total demand and offer
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return array
+     */
+    public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => "Depth",
+            'params' => compact('pair'),
+        ];
+    }
+
+    /**
+     * get total demand and offer
+     *
+     * @param string $response
+     * @return float|null
+     */
+    public function getTotalDemandAndOfferHandle($response)
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || $response['error'] != []) {
+            return null;
+        }
+        foreach ($response['result'] as $item) {
+            $totalDemand = 0;
+
+            foreach ($item['asks'] as $ask) {
+                $totalDemand += $ask[0] * $ask[1];
+            }
+
+            $offersAmounts = array_column($item['bids'], 1);
+
+            $totalOffer = array_sum($offersAmounts);
+
+            return compact('totalDemand', 'totalOffer');
+        }
+    }
 }

@@ -241,6 +241,127 @@ class Poloniex extends StockExchange
     }
 
     /**
+     * Get last trade data url
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return array
+     */
+    public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USDT')
+    {
+        $currencyPair = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => 'returnTradeHistory',
+            'params' => compact('currencyPair')
+        ];
+    }
+
+    /**
+     * Get last trade data handle
+     *
+     * @param string $response
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return float|null
+     */
+    public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USDT')
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || !is_array($response) || isset($response['error'])) {
+            return null;
+        }
+
+        $sum = (float) $response[0]['total'];
+        $volume = (float) $response[0]['amount'];
+
+        return compact('sum', 'volume');
+    }
+
+    /**
+     * Get total volume url
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return array
+     */
+    public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USDT')
+    {
+        $currencyPair = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => 'returnTicker',
+            'params' => compact('currencyPair')
+        ];
+    }
+
+    /**
+     * Get total volume handle
+     *
+     * @param string $response
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return null|float
+     */
+    public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USDT')
+    {
+        $response = json_decode($response, true);
+
+        if (!$response) {
+            return null;
+        }
+
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return (float) $response[$pair]['quoteVolume'];
+    }
+
+    /**
+     * get total demand and offer
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return array
+     */
+    public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USDT')
+    {
+        $currencyPair = $this->getPair($first_currency, $second_currency);
+        $depth = 100000;
+
+        return [
+            'uri' => 'returnOrderBook',
+            'params' => compact('currencyPair', 'depth')
+        ];
+    }
+
+    /**
+     * get total demand
+     *
+     * @param string $response
+     * @return float|null
+     */
+    public function getTotalDemandAndOfferHandle($response)
+    {
+        $response = json_decode($response, true);
+
+        if (!$response) {
+            return null;
+        }
+
+        $totalDemand = 0;
+
+        foreach ($response['asks'] as $ask) {
+            $totalDemand += $ask[0] * $ask[1];
+        }
+        $bidsAmounts = array_column($response['bids'], 1);
+
+        $totalOffer = array_sum($bidsAmounts);
+
+        return compact('totalDemand', 'totalOffer');
+    }
+
+    /**
      * Return pair string
      *
      * change USD to USDT, becouse poloniex don't have USD

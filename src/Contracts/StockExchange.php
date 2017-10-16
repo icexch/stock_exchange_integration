@@ -72,4 +72,31 @@ interface StockExchange
      * @return null|array
      */
     public function getChartData($first_currency = 'BTC', $second_currency = 'USD');
+
+    /**
+     * Get last trade data
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return array
+     */
+    public function getLastTradeData($first_currency = 'BTC', $second_currency = 'USD');
+
+    /**
+     * Get total volume
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return null|float
+     */
+    public function getTotalVolume($first_currency = 'BTC', $second_currency = 'USD');
+
+    /**
+     * Get total demand and offer
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return array
+     */
+    public function getTotalDemandAndOffer($first_currency = 'BTC', $second_currency = 'USD');
 }
