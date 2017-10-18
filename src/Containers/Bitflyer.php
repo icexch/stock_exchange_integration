@@ -71,6 +71,10 @@ class Bitflyer extends StockExchange
         $pricesJSON = $this->api_request('getprices');
         $prices = json_decode($pricesJSON, true);
 
+        if (!$prices || isset($prices['error_message'])) {
+            return null;
+        }
+
         $coins = [];
 
         foreach ($prices as $pair) {
