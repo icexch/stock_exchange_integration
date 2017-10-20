@@ -3,13 +3,13 @@
 namespace Warchiefs\StockExchangeIntegration\Containers;
 
 /**
- * Class Binance
+ * Class Bitconnect
  *
  * @package Warchiefs\StockExchangeIntegration\Containers
  */
-class Binance extends StockExchange
+class Bitconnect extends StockExchange
 {
-    public $api_uri = 'https://www.binance.com/api/v1';
+    public $api_uri = 'https://bitconnect.co/api';
 
     public function getAvailableQuotation()
     {
@@ -34,14 +34,7 @@ class Binance extends StockExchange
     public function getAvailableCoins()
     {
         return [
-            'BTC',
-            'WTC',
-            'NEO',
-            'LINK',
-            'BNB',
-            'BNB',
-            'QTUM',
-            'SALT',
+            'BCC',
         ];
     }
 
@@ -52,7 +45,9 @@ class Binance extends StockExchange
      */
     public function getPairPriceUrl($first_currency = 'BTC', $second_currency = 'USDT')
     {
-        return "ticker/allPrices";
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "info/" . $pair;
     }
 
     /**
@@ -67,19 +62,11 @@ class Binance extends StockExchange
     {
         $response = json_decode($response, true);
 
-        if (!$response) {
+        if (!$response || $response['status'] === 'fail') {
             return null;
         }
 
-        $pair = $this->getPair($first_currency, $second_currency);
-
-        $prices = array_column($response, 'price', 'symbol');
-
-        if (!isset($prices[$pair])) {
-            return null;
-        }
-
-        return (float) $prices[$pair];
+        return (float) $response['markets'][0]['last_price'];
     }
 
     public function getChartData($first_currency = 'BTC', $second_currency = 'USDT')
@@ -94,14 +81,9 @@ class Binance extends StockExchange
      * @param string $second_currency
      * @return array
      */
-    public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USDT')
+    public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'BCC')
     {
-        $symbol = $this->getPair($first_currency, $second_currency);
-
-        return [
-            'uri' => 'aggTrades',
-            'params' => compact('symbol'),
-        ];
+        return null;
     }
 
     /**
@@ -114,18 +96,7 @@ class Binance extends StockExchange
      */
     public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USDT')
     {
-        $response = json_decode($response, true);
-
-        if (!$response) {
-            return null;
-        }
-
-        $lastTrade = $response[count($response) - 1];
-
-        $sum =  round($lastTrade['p'] * $lastTrade['q'], 8);
-        $volume = (float) $lastTrade['q'];
-
-        return compact('sum', 'volume');
+        return null;
     }
 
     /**
@@ -137,12 +108,7 @@ class Binance extends StockExchange
      */
     public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USDT')
     {
-        $symbol = $this->getPair($first_currency, $second_currency);
-
-        return [
-            'uri' => 'ticker/24hr',
-            'params' => compact('symbol'),
-        ];
+        return null;
     }
 
     /**
@@ -155,13 +121,7 @@ class Binance extends StockExchange
      */
     public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USDT')
     {
-        $response = json_decode($response, true);
-
-        if (!$response) {
-            return null;
-        }
-
-        return (float) $response['volume'];
+        return null;
     }
 
     /**
@@ -173,12 +133,7 @@ class Binance extends StockExchange
      */
     public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USDT')
     {
-        $symbol = $this->getPair($first_currency, $second_currency);
-
-        return [
-            'uri' => 'depth',
-            'params' => compact('symbol')
-        ];
+        return null;
     }
 
     /**
@@ -189,23 +144,7 @@ class Binance extends StockExchange
      */
     public function getTotalDemandAndOfferHandle($response)
     {
-        $response = json_decode($response, true);
-
-        if (!$response) {
-            return null;
-        }
-
-        $totalDemand = 0;
-
-        foreach ($response['asks'] as $ask) {
-            $totalDemand += $ask[0] * $ask[1];
-        }
-
-        $offersAmounts = array_column($response['bids'], 1);
-
-        $totalOffer = array_sum($offersAmounts);
-
-        return compact('totalDemand', 'totalOffer');
+        return null;
     }
 
     /**
@@ -215,19 +154,8 @@ class Binance extends StockExchange
      * @param string $second_currency
      * @return string
      */
-    private function getPair($first_currency = 'BTC', $second_currency = 'USDT')
+    private function getPair($first_currency = 'BTC', $second_currency = 'BCC')
     {
-        if ($second_currency === 'USD') {
-            $second_currency .= 'T';
-        }
-
-        if ($second_currency === 'IOT') {
-            $second_currency .= 'A';
-        }
-        if ($first_currency === 'IOT') {
-            $first_currency .= 'A';
-        }
-
-        return $first_currency . $second_currency;
+        return $first_currency . '_' . $second_currency;
     }
 }

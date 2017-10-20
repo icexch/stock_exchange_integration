@@ -271,6 +271,13 @@ class Bitfinex extends StockExchange
             $second_currency = 'dsh';
         }
 
+        if ($first_currency === 'QTUM') {
+            $first_currency = 'QTM';
+        }
+        if ($second_currency === 'QTUM') {
+            $second_currency = 'QTM';
+        }
+
         return strtolower($first_currency . $second_currency);
     }
 }
