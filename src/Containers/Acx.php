@@ -83,11 +83,13 @@ class Acx extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "trades.json?market={$pair}";
     }
 
     /**
@@ -100,7 +102,16 @@ class Acx extends StockExchange
      */
     public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response) {
+            return null;
+        }
+
+        $sum = (float) $response[0]['funds'];
+        $volume = (float) $response[0]['volume'];
+
+        return compact('sum', 'volume');
     }
 
     /**
@@ -108,11 +119,11 @@ class Acx extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        return "tickers.json";
     }
 
     /**
@@ -125,7 +136,15 @@ class Acx extends StockExchange
      */
     public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        if (!$response || !isset($response[$pair])) {
+            return null;
+        }
+
+        return (float) $response[$pair]['ticker']['vol'];
     }
 
     /**
@@ -133,11 +152,13 @@ class Acx extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "order_book.json?market={$pair}&asks_limit=200&bids_limit=200";
     }
 
     /**
@@ -148,7 +169,23 @@ class Acx extends StockExchange
      */
     public function getTotalDemandAndOfferHandle($response)
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response) {
+            return null;
+        }
+
+        $totalDemand = 0;
+
+        foreach ($response['asks'] as $ask) {
+            $totalDemand += $ask['price'] * $ask['volume'];
+        }
+
+        $offersAmounts = array_column($response['bids'], 'volume');
+
+        $totalOffer = array_sum($offersAmounts);
+
+        return compact('totalDemand', 'totalOffer');
     }
 
     /**
