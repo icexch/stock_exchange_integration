@@ -72,7 +72,7 @@ class Btc38 extends StockExchange
     {
         $response = json_decode($response, true);
 
-        if (!$response || !is_array($response)) {
+        if (!$response || !is_array($response) || !isset($response['ticker']) || !isset($response['ticker']['last'])) {
             return null;
         }
 
