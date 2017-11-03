@@ -124,43 +124,51 @@ abstract class StockExchange implements Exchange
         $rcx->setTimeout($timeout);
         $options = [CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"];
         foreach ($containers as $exchangeName => $container) {
-            if (is_array($only)) {
-                if (!in_array($exchangeName, $only)) {
-                    continue;
-                }
-            }
-            if ($container->isOnlyFiat() && $second_currency !== 'USD') {
-                continue;
-            }
-            $requestUrl = $container->getPairPriceUrl($first_currency, $second_currency);
-            if (is_array($requestUrl)) {
-                $url = $container->uri_construct($requestUrl['uri'], $requestUrl['params']);
-            } else {
-                $url = $container->uri_construct($requestUrl);
-            }
+		
+	    try {
+		    
+		    if (is_array($only)) {
+			if (!in_array($exchangeName, $only)) {
+			    continue;
+			}
+		    }
+		    if ($container->isOnlyFiat() && $second_currency !== 'USD') {
+			continue;
+		    }
+		    $requestUrl = $container->getPairPriceUrl($first_currency, $second_currency);
+		    if (is_array($requestUrl)) {
+			$url = $container->uri_construct($requestUrl['uri'], $requestUrl['params']);
+		    } else {
+			$url = $container->uri_construct($requestUrl);
+		    }
 
-            $rcx->addRequest(
-                $url,
-                null,
-                function($response, $url, $request_info, $user_data, $time) use ($container, $first_currency, $second_currency, $convertCallback, $exchangeName) {
-                    $price = $container->getPairPriceHandle($response, $first_currency, $second_currency);
-                    if ($price && $second_currency === 'USD' && $fiatCurrency = $container->isFiat()) {
-                        if (is_callable($convertCallback)) {
-                            $price = $convertCallback($fiatCurrency, $price);
-                        }
-                    }
+		    $rcx->addRequest(
+			$url,
+			null,
+			function($response, $url, $request_info, $user_data, $time) use ($container, $first_currency, $second_currency, $convertCallback, $exchangeName) {
+			    $price = $container->getPairPriceHandle($response, $first_currency, $second_currency);
+			    if ($price && $second_currency === 'USD' && $fiatCurrency = $container->isFiat()) {
+				if (is_callable($convertCallback)) {
+				    $price = $convertCallback($fiatCurrency, $price);
+				}
+			    }
 
-                    if ($price) {
-                        self::$prices[$exchangeName] = $price;
-                    }
-                },
-                null,
-                $options,
-                null
-            );
+			    if ($price) {
+				self::$prices[$exchangeName] = $price;
+			    }
+			},
+			null,
+			$options,
+			null
+		    );
+	    } catch(\Exception $e) {continue;}	
         }
 
-        $rcx->execute();
+        try {
+		$rcx->execute();
+	} catch(\Exception $e) {
+		//
+	}	
 
         $prices = self::$prices;
         self::$prices = [];
