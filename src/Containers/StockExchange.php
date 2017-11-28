@@ -23,8 +23,10 @@ abstract class StockExchange implements Exchange
 	protected static $prices;
 	protected static $buffer;
 
+	private $userAgent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36';
+
 	/**
-	 * Counstruct an url for api request
+	 * Construct an url for api request
 	 *
 	 * @param       $method
 	 * @param array $params
@@ -154,7 +156,7 @@ abstract class StockExchange implements Exchange
 			    }
 
 			    if ($price) {
-				self::$prices[$exchangeName] = $price;
+				    self::$prices[$exchangeName] = $price;
 			    }
 			},
 			null,
@@ -169,6 +171,79 @@ abstract class StockExchange implements Exchange
 	} catch(\Exception $e) {
 		//
 	}	
+
+        $prices = self::$prices;
+        self::$prices = [];
+
+        return $prices;
+    }
+
+    /**
+     * @param array $data
+     * @param null|Callable $convertFiatCallback
+     * @param null|Callable $convertCryptoCallback
+     * @param int $timeout
+     * @return array
+     */
+    public function getAllPricesAsyncSuper($data, $convertFiatCallback = null, $convertCryptoCallback = null, $timeout = 3000)
+    {
+        $containers = self::getExchangeContainers(array_keys($data));
+
+        $rcx = new RollingCurlX(10);
+        $rcx->setTimeout($timeout);
+        $options = [CURLOPT_USERAGENT => $this->userAgent];
+        foreach ($data as $exchangeName => $pairs) {
+            $container = $containers[$exchangeName];
+            foreach ($pairs as $pair) {
+                try {
+                    if ($container->isOnlyFiat() && $pair[1] !== 'USD') {
+                        continue;
+                    }
+                    $requestUrl = $container->getPairPriceUrl($pair[0], $pair[1]);
+                    if (is_array($requestUrl)) {
+                        $url = $container->uri_construct($requestUrl['uri'], $requestUrl['params']);
+                    } else {
+                        $url = $container->uri_construct($requestUrl);
+                    }
+
+                    $rcx->addRequest(
+                        $url,
+                        null,
+                        function($response, $url, $request_info, $user_data, $time) use ($container, $pair, $convertFiatCallback, $convertCryptoCallback, $exchangeName) {
+                            $price = $container->getPairPriceHandle($response, $pair[0], $pair[1]);
+                            if (!$price) {
+                                return;
+                            }
+                            if ($pair[1] === 'USD') {
+                                if ($fiatCurrency = $container->isFiat()) {
+                                    if (is_callable($convertFiatCallback)) {
+                                        $price = $convertFiatCallback($fiatCurrency, $price);
+                                    }
+                                }
+                            } else {
+                                if (is_callable($convertCryptoCallback)) {
+                                    $inversely = $pair[2];
+                                    $price = $convertCryptoCallback($inversely ? $pair[0] : $pair[1], $price, $inversely);
+                                }
+                            }
+                            self::$prices["{$exchangeName}"]["{$pair[0]}_{$pair[1]}"] = round($price, 8);
+//                            self::$prices["{$exchangeName}_{$pair[0]}_{$pair[1]}"] = round($price, 8);
+                        },
+                        null,
+                        $options,
+                        null
+                    );
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+        }
+        shuffle($rcx->requests);
+        try {
+            $rcx->execute();
+        } catch(\Exception $e) {
+            //
+        }
 
         $prices = self::$prices;
         self::$prices = [];

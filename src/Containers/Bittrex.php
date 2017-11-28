@@ -230,7 +230,7 @@ class Bittrex extends StockExchange
     {
         $response = json_decode($response, true);
 
-        if (!$response || $response['success'] !== true) {
+        if (!$response || $response['success'] !== true || !isset($response['result']['buy']) || !$response['result']['buy']) {
             return null;
         }
 
