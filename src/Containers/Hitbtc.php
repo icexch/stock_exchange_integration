@@ -169,8 +169,9 @@ class Hitbtc extends StockExchange
 
         $sum = round($response['trades'][0]['price'] * $response['trades'][0]['amount'], 8);
         $volume = (float) $response['trades'][0]['amount'];
+        $price = (float) $response['trades'][0]['price'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**

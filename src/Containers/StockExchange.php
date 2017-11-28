@@ -226,13 +226,18 @@ abstract class StockExchange implements Exchange
                 function($response, $url, $request_info, $user_data, $time) use ($container, $first_currency, $second_currency, $convertCallback, $exchangeName) {
                     $data = $container->getLastTradeDataHandle($response, $first_currency, $second_currency);
                     $sum = $data['sum'];
+                    $price = $data['price'];
                     if ($data && $second_currency === 'USD' && $fiatCurrency = $container->isFiat()) {
                         if (is_callable($convertCallback)) {
                             $sum = $convertCallback($fiatCurrency, $sum);
+                            $price = $convertCallback($fiatCurrency, $price);
                         }
                     }
                     if ($sum) {
                         $data['sum'] = $sum;
+                    }
+                    if ($price) {
+                        $data['price'] = $price;
                     }
                     if ($data['sum']) {
                         self::$buffer[$exchangeName]['lastTradeData'] = $data;

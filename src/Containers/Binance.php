@@ -122,10 +122,11 @@ class Binance extends StockExchange
 
         $lastTrade = $response[count($response) - 1];
 
+        $price = (float) $lastTrade['p'];
         $sum =  round($lastTrade['p'] * $lastTrade['q'], 8);
         $volume = (float) $lastTrade['q'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**

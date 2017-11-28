@@ -275,8 +275,9 @@ class Poloniex extends StockExchange
 
         $sum = (float) $response[0]['total'];
         $volume = (float) $response[0]['amount'];
+        $price = (float) $response[0]['rate'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**

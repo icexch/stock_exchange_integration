@@ -114,8 +114,9 @@ class Livecoin extends StockExchange
 
         $sum = round($lastTrade['price'] * $lastTrade['quantity'], 8);
         $volume = (float) $lastTrade['quantity'];
+        $price = (float) $lastTrade['price'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**

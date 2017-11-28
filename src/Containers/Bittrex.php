@@ -162,8 +162,9 @@ class Bittrex extends StockExchange
 
         $sum = $response['result'][0]['Total'];
         $volume = $response['result'][0]['Quantity'];
+        $price = $response['result'][0]['Price'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**

@@ -145,8 +145,9 @@ class Huobi extends StockExchange
 
         $sum = round($response['data'][0]['data'][0]['price'] * $response['data'][0]['data'][0]['amount'], 8);
         $volume = (float) $response['data'][0]['data'][0]['amount'];
+        $price = (float) $response['data'][0]['data'][0]['price'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**
