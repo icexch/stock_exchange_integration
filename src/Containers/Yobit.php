@@ -41,7 +41,7 @@ class Yobit extends StockExchange
     /**
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getPairPriceUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
@@ -81,11 +81,13 @@ class Yobit extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "trades/{$pair}";
     }
 
     /**
@@ -98,7 +100,20 @@ class Yobit extends StockExchange
      */
     public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['error'])) {
+            return null;
+        }
+
+        $response = array_values($response)[0];
+
+        $lastTrade = $response[0];
+
+        $sum = round($lastTrade['price'] * $lastTrade['amount'], 8);
+        $volume = (float) $lastTrade['amount'];
+
+        return compact('sum', 'volume');
     }
 
     /**
@@ -106,11 +121,13 @@ class Yobit extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "ticker/{$pair}";
     }
 
     /**
@@ -123,7 +140,15 @@ class Yobit extends StockExchange
      */
     public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['error'])) {
+            return null;
+        }
+
+        $response = array_values($response);
+
+        return (float) $response[0]['vol'];
     }
 
     /**
@@ -131,22 +156,42 @@ class Yobit extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "depth/{$pair}?limit=2000";
     }
 
     /**
      * get total demand
      *
      * @param string $response
-     * @return float|null
+     * @return array
      */
     public function getTotalDemandAndOfferHandle($response)
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['error'])) {
+            return null;
+        }
+
+        $response = array_values($response)[0];
+
+        $totalDemand = 0;
+
+        foreach ($response['asks'] as $ask) {
+            $totalDemand += $ask[0] * $ask[1];
+        }
+
+        $offersAmounts = array_column($response['bids'], 1);
+
+        $totalOffer = array_sum($offersAmounts);
+
+        return compact('totalDemand', 'totalOffer');
     }
 
     /**

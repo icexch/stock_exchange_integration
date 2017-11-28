@@ -86,7 +86,12 @@ class Okex extends StockExchange
      */
     public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $symbol = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => 'trades.do',
+            'params' => compact('symbol'),
+        ];
     }
 
     /**
@@ -99,7 +104,18 @@ class Okex extends StockExchange
      */
     public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['error_code'])) {
+            return null;
+        }
+
+        $lastTrade = $response[count($response) - 1];
+
+        $sum = round($lastTrade['price'] * $lastTrade['amount'], 8);
+        $volume = (float) $lastTrade['amount'];
+
+        return compact('sum', 'volume');
     }
 
     /**
@@ -111,7 +127,12 @@ class Okex extends StockExchange
      */
     public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $symbol = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => 'ticker.do',
+            'params' => compact('symbol'),
+        ];
     }
 
     /**
@@ -124,7 +145,13 @@ class Okex extends StockExchange
      */
     public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['error_code'])) {
+            return null;
+        }
+
+        return (float) $response['ticker']['vol'];
     }
 
     /**
@@ -136,7 +163,12 @@ class Okex extends StockExchange
      */
     public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $symbol = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => 'depth.do',
+            'params' => compact('symbol'),
+        ];
     }
 
     /**
@@ -147,7 +179,23 @@ class Okex extends StockExchange
      */
     public function getTotalDemandAndOfferHandle($response)
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['error_code'])) {
+            return null;
+        }
+
+        $totalDemand = 0;
+
+        foreach ($response['asks'] as $ask) {
+            $totalDemand += $ask[0] * $ask[1];
+        }
+
+        $offersAmounts = array_column($response['bids'], 1);
+
+        $totalOffer = array_sum($offersAmounts);
+
+        return compact('totalDemand', 'totalOffer');
     }
 
     /**

@@ -79,11 +79,13 @@ class Bitbay extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "{$pair}/trades.json";
     }
 
     /**
@@ -96,7 +98,18 @@ class Bitbay extends StockExchange
      */
     public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['message'])) {
+            return null;
+        }
+
+        $lastTrade = $response[count($response) - 1];
+
+        $sum = round($lastTrade['price'] * $lastTrade['amount'], 8);
+        $volume = (float) $lastTrade['amount'];
+
+        return compact('sum', 'volume');
     }
 
     /**
@@ -104,11 +117,13 @@ class Bitbay extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "{$pair}/ticker.json";
     }
 
     /**
@@ -121,7 +136,13 @@ class Bitbay extends StockExchange
      */
     public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['message'])) {
+            return null;
+        }
+
+        return (float) $response['volume'];
     }
 
     /**
@@ -129,11 +150,13 @@ class Bitbay extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "{$pair}/orderbook.json";
     }
 
     /**
@@ -144,7 +167,23 @@ class Bitbay extends StockExchange
      */
     public function getTotalDemandAndOfferHandle($response)
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['status'])) {
+            return null;
+        }
+
+        $totalDemand = 0;
+
+        foreach ($response['asks'] as $ask) {
+            $totalDemand += $ask[0] * $ask[1];
+        }
+
+        $offersAmounts = array_column($response['bids'], 1);
+
+        $totalOffer = array_sum($offersAmounts);
+
+        return compact('totalDemand', 'totalOffer');
     }
 
     /**

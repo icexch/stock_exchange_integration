@@ -79,11 +79,13 @@ class Novaexchange extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $currencyPair = $this->getPair($first_currency, $second_currency);
+
+        return "market/orderhistory/{$currencyPair}/";
     }
 
     /**
@@ -96,7 +98,18 @@ class Novaexchange extends StockExchange
      */
     public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || $response['status'] !== 'success') {
+            return null;
+        }
+
+        $lastTrade = $response['items'][0];
+
+        $sum = round($lastTrade['price'] * $lastTrade['amount'], 8);
+        $volume = (float) $lastTrade['amount'];
+
+        return compact('sum', 'volume');
     }
 
     /**
@@ -104,11 +117,13 @@ class Novaexchange extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $currencyPair = $this->getPair($first_currency, $second_currency);
+
+        return "market/info/{$currencyPair}/";
     }
 
     /**
@@ -121,7 +136,13 @@ class Novaexchange extends StockExchange
      */
     public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || $response['status'] !== 'success') {
+            return null;
+        }
+
+        return (float) $response['markets'][0]['volume24h'];
     }
 
     /**
@@ -129,11 +150,13 @@ class Novaexchange extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $currencyPair = $this->getPair($first_currency, $second_currency);
+
+        return "market/openorders/{$currencyPair}/BOTH/";
     }
 
     /**
@@ -144,7 +167,23 @@ class Novaexchange extends StockExchange
      */
     public function getTotalDemandAndOfferHandle($response)
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || $response['status'] !== 'success') {
+            return null;
+        }
+
+        $totalDemand = 0;
+
+        foreach ($response['buyorders'] as $ask) {
+            $totalDemand += $ask['price'] * $ask['amount'];
+        }
+
+        $offersAmounts = array_column($response['sellorders'], 'amount');
+
+        $totalOffer = array_sum($offersAmounts);
+
+        return compact('totalDemand', 'totalOffer');
     }
 
     /**

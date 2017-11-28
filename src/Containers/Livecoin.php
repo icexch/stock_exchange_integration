@@ -86,7 +86,12 @@ class Livecoin extends StockExchange
      */
     public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $currencyPair = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => 'exchange/last_trades',
+            'params' => compact('currencyPair'),
+        ];
     }
 
     /**
@@ -99,7 +104,18 @@ class Livecoin extends StockExchange
      */
     public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['success'])) {
+            return null;
+        }
+
+        $lastTrade = $response[0];
+
+        $sum = round($lastTrade['price'] * $lastTrade['quantity'], 8);
+        $volume = (float) $lastTrade['quantity'];
+
+        return compact('sum', 'volume');
     }
 
     /**
@@ -111,7 +127,12 @@ class Livecoin extends StockExchange
      */
     public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $currencyPair = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => 'exchange/ticker',
+            'params' => compact('currencyPair'),
+        ];
     }
 
     /**
@@ -124,7 +145,13 @@ class Livecoin extends StockExchange
      */
     public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['success'])) {
+            return null;
+        }
+
+        return (float) $response['volume'];
     }
 
     /**
@@ -136,7 +163,12 @@ class Livecoin extends StockExchange
      */
     public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $currencyPair = $this->getPair($first_currency, $second_currency);
+        $depth = 2000;
+        return [
+            'uri' => 'exchange/order_book',
+            'params' => compact('currencyPair', 'depth'),
+        ];
     }
 
     /**
@@ -147,7 +179,23 @@ class Livecoin extends StockExchange
      */
     public function getTotalDemandAndOfferHandle($response)
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['success'])) {
+            return null;
+        }
+
+        $totalDemand = 0;
+
+        foreach ($response['asks'] as $ask) {
+            $totalDemand += $ask[0] * $ask[1];
+        }
+
+        $offersAmounts = array_column($response['bids'], 1);
+
+        $totalOffer = array_sum($offersAmounts);
+
+        return compact('totalDemand', 'totalOffer');
     }
 
     /**

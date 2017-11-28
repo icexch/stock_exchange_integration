@@ -88,7 +88,12 @@ class Coinnest extends StockExchange
      */
     public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $coin = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => 'pub/trades',
+            'params' => compact('coin'),
+        ];
     }
 
     /**
@@ -101,7 +106,18 @@ class Coinnest extends StockExchange
      */
     public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['status'])) {
+            return null;
+        }
+
+        $lastTrade = $response[count($response) - 1];
+
+        $sum = round($lastTrade['price'] * $lastTrade['amount'], 8);
+        $volume = (float) $lastTrade['amount'];
+
+        return compact('sum', 'volume');
     }
 
     /**
@@ -113,7 +129,12 @@ class Coinnest extends StockExchange
      */
     public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $coin = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => 'pub/ticker',
+            'params' => compact('coin'),
+        ];
     }
 
     /**
@@ -126,7 +147,13 @@ class Coinnest extends StockExchange
      */
     public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['status'])) {
+            return null;
+        }
+
+        return (float) $response['vol'];
     }
 
     /**
@@ -138,7 +165,12 @@ class Coinnest extends StockExchange
      */
     public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $coin = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => 'pub/depth',
+            'params' => compact('coin'),
+        ];
     }
 
     /**
@@ -149,7 +181,23 @@ class Coinnest extends StockExchange
      */
     public function getTotalDemandAndOfferHandle($response)
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['status'])) {
+            return null;
+        }
+
+        $totalDemand = 0;
+
+        foreach ($response['asks'] as $ask) {
+            $totalDemand += $ask[0] * $ask[1];
+        }
+
+        $offersAmounts = array_column($response['bids'], 1);
+
+        $totalOffer = array_sum($offersAmounts);
+
+        return compact('totalDemand', 'totalOffer');
     }
 
     /**

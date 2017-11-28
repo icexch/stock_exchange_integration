@@ -10,6 +10,7 @@ namespace Warchiefs\StockExchangeIntegration\Containers;
 class Bitcoinco extends StockExchange
 {
     public $api_uri = 'https://vip.bitcoin.co.id/api';
+    protected $fiat = 'IDR';
 
     public function getAvailableQuotation()
     {
@@ -79,11 +80,13 @@ class Bitcoinco extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "{$pair}/trades";
     }
 
     /**
@@ -96,7 +99,18 @@ class Bitcoinco extends StockExchange
      */
     public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['error'])) {
+            return null;
+        }
+
+        $lastTrade = $response[0];
+
+        $sum = round($lastTrade['price'] * $lastTrade['amount'], 8);
+        $volume = (float) $lastTrade['amount'];
+
+        return compact('sum', 'volume');
     }
 
     /**
@@ -104,11 +118,13 @@ class Bitcoinco extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "{$pair}/ticker";
     }
 
     /**
@@ -121,7 +137,15 @@ class Bitcoinco extends StockExchange
      */
     public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['error'])) {
+            return null;
+        }
+
+        $currency = strtolower($first_currency);
+
+        return round($response['ticker']["vol_{$currency}"], 8);
     }
 
     /**
@@ -129,11 +153,13 @@ class Bitcoinco extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "{$pair}/depth";
     }
 
     /**
@@ -144,7 +170,23 @@ class Bitcoinco extends StockExchange
      */
     public function getTotalDemandAndOfferHandle($response)
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['error'])) {
+            return null;
+        }
+
+        $totalDemand = 0;
+
+        foreach ($response['buy'] as $ask) {
+            $totalDemand += $ask[0] * $ask[1];
+        }
+
+        $offersAmounts = array_column($response['sell'], 1);
+
+        $totalOffer = array_sum($offersAmounts);
+
+        return compact('totalDemand', 'totalOffer');
     }
 
     /**

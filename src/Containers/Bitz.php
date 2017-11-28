@@ -86,7 +86,12 @@ class Bitz extends StockExchange
      */
     public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $coin = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => 'orders',
+            'params' => compact('coin')
+        ];
     }
 
     /**
@@ -99,7 +104,18 @@ class Bitz extends StockExchange
      */
     public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || !$response['data']) {
+            return null;
+        }
+
+        $lastTrade = $response['data']['d'][0];
+
+        $sum = round($lastTrade['p'] * $lastTrade['n'], 8);
+        $volume = (float) $lastTrade['n'];
+
+        return compact('sum', 'volume');
     }
 
     /**
@@ -111,7 +127,12 @@ class Bitz extends StockExchange
      */
     public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $coin = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => 'ticker',
+            'params' => compact('coin')
+        ];
     }
 
     /**
@@ -124,7 +145,13 @@ class Bitz extends StockExchange
      */
     public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || !$response['data']) {
+            return null;
+        }
+
+        return (float) $response['data']['vol'];
     }
 
     /**
@@ -136,7 +163,12 @@ class Bitz extends StockExchange
      */
     public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $coin = $this->getPair($first_currency, $second_currency);
+
+        return [
+            'uri' => 'depth',
+            'params' => compact('coin')
+        ];
     }
 
     /**
@@ -147,7 +179,23 @@ class Bitz extends StockExchange
      */
     public function getTotalDemandAndOfferHandle($response)
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || !$response['data']) {
+            return null;
+        }
+
+        $totalDemand = 0;
+
+        foreach ($response['data']['asks'] as $ask) {
+            $totalDemand += $ask[0] * $ask[1];
+        }
+
+        $offersAmounts = array_column($response['data']['bids'], 1);
+
+        $totalOffer = array_sum($offersAmounts);
+
+        return compact('totalDemand', 'totalOffer');
     }
 
     /**

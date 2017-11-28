@@ -170,6 +170,10 @@ class Btc38 extends StockExchange
             return null;
         }
 
+        if (!isset($response['ticker'], $response['ticker']['vol'])) {
+            return null;
+        }
+
         return $response['ticker']['vol'];
     }
 

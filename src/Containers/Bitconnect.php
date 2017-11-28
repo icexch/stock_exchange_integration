@@ -104,11 +104,13 @@ class Bitconnect extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USDT')
     {
-        return null;
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "info/" . $pair;
     }
 
     /**
@@ -121,7 +123,13 @@ class Bitconnect extends StockExchange
      */
     public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USDT')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || $response['status'] === 'fail') {
+            return null;
+        }
+
+        return (float) $response['markets'][0]['volume24h'];
     }
 
     /**

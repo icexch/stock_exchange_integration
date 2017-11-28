@@ -178,20 +178,33 @@ abstract class StockExchange implements Exchange
 
     /**
      * @param string $first_currency
-     * @param string $second_currency
+     * @param $second_currencies
      * @param null $convertCallback
      * @param null $only
      * @param int $timeout
      * @return mixed
      */
-    public function getCoinDataAsync($first_currency = 'BTC', $second_currency = 'USD', $convertCallback = null, $only = null, $timeout = 3000)
+    public function getCoinDataAsync($first_currency = 'BTC', $second_currencies, $convertCallback = null, $only = null, $timeout = 3000)
     {
         $containers = self::getExchangeContainers($only);
 
         $rcx = new RollingCurlX(30);
         $rcx->setTimeout($timeout);
         $options = [CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"];
+        $first_currency_temp = $first_currency;
         foreach ($containers as $exchangeName => $container) {
+            $first_currency = $first_currency_temp;
+            if (!empty($second_currencies)) {
+                if (is_array($second_currencies[$exchangeName])) {
+                    $first_currency = $second_currencies[$exchangeName][0];
+                    $second_currency = $second_currencies[$exchangeName][1];
+                } else {
+                    $second_currency = $second_currencies[$exchangeName];
+                }
+            } else {
+                $second_currency = 'USD';
+            }
+
             if (is_array($only)) {
                 if (!in_array($exchangeName, $only)) {
                     continue;
@@ -221,7 +234,9 @@ abstract class StockExchange implements Exchange
                     if ($sum) {
                         $data['sum'] = $sum;
                     }
-                    self::$buffer[$exchangeName]['lastTradeData'] = $data;
+                    if ($data['sum']) {
+                        self::$buffer[$exchangeName]['lastTradeData'] = $data;
+                    }
                 },
                 null,
                 $options,
@@ -240,7 +255,9 @@ abstract class StockExchange implements Exchange
                 null,
                 function($response, $url, $request_info, $user_data, $time) use ($container, $first_currency, $second_currency, $convertCallback, $exchangeName) {
                     $volume = $container->getTotalVolumeHandle($response, $first_currency, $second_currency);
-                    self::$buffer[$exchangeName]['totalVolume'] = $volume;
+                    if ($volume) {
+                        self::$buffer[$exchangeName]['totalVolume'] = $volume;
+                    }
                 },
                 null,
                 $options,
@@ -269,8 +286,11 @@ abstract class StockExchange implements Exchange
                     if ($demand) {
                         $data['totalDemand'] = $demand;
                     }
-                    self::$buffer[$exchangeName]['totalDemandUsd'] = round($data['totalDemand'], 8);
-                    self::$buffer[$exchangeName]['totalOffer'] = $data['totalOffer'];
+
+                    if ($data['totalDemand']) {
+                        self::$buffer[$exchangeName]['totalDemandUsd'] = round($data['totalDemand'], 8);
+                        self::$buffer[$exchangeName]['totalOffer'] = $data['totalOffer'];
+                    }
                 },
                 null,
                 $options,

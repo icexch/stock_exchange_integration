@@ -124,13 +124,6 @@ class Hitbtc extends StockExchange
      */
     private function getPair($first_currency = 'BTC', $second_currency = 'USD')
     {
-        if ($first_currency === 'BCH') {
-            $first_currency = 'BCC';
-        }
-        if ($second_currency === 'BCH') {
-            $second_currency = 'BCC';
-        }
-
         return $first_currency . $second_currency;
     }
 

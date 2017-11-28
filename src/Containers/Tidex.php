@@ -81,11 +81,13 @@ class Tidex extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "trades/{$pair}";
     }
 
     /**
@@ -98,7 +100,18 @@ class Tidex extends StockExchange
      */
     public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['error'])) {
+            return null;
+        }
+
+        $lastTrade = array_values($response)[0][0];
+
+        $sum = round($lastTrade['price'] * $lastTrade['amount'], 8);
+        $volume = (float) $lastTrade['amount'];
+
+        return compact('sum', 'volume');
     }
 
     /**
@@ -106,11 +119,13 @@ class Tidex extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "ticker/{$pair}";
     }
 
     /**
@@ -123,7 +138,15 @@ class Tidex extends StockExchange
      */
     public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['error'])) {
+            return null;
+        }
+
+        $response = array_values($response);
+
+        return (float) $response[0]['vol'];
     }
 
     /**
@@ -131,11 +154,13 @@ class Tidex extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        return null;
+        $pair = $this->getPair($first_currency, $second_currency);
+
+        return "depth/{$pair}";
     }
 
     /**
@@ -146,7 +171,25 @@ class Tidex extends StockExchange
      */
     public function getTotalDemandAndOfferHandle($response)
     {
-        return null;
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['error'])) {
+            return null;
+        }
+
+        $response = array_values($response)[0];
+
+        $totalDemand = 0;
+
+        foreach ($response['asks'] as $ask) {
+            $totalDemand += $ask[0] * $ask[1];
+        }
+
+        $offersAmounts = array_column($response['bids'], 1);
+
+        $totalOffer = array_sum($offersAmounts);
+
+        return compact('totalDemand', 'totalOffer');
     }
 
     /**
