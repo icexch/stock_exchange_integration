@@ -224,7 +224,12 @@ abstract class StockExchange implements Exchange
                 $url,
                 null,
                 function($response, $url, $request_info, $user_data, $time) use ($container, $first_currency, $second_currency, $convertCallback, $exchangeName) {
-                    $data = $container->getLastTradeDataHandle($response, $first_currency, $second_currency);
+                    try {
+                        $data = $container->getLastTradeDataHandle($response, $first_currency, $second_currency);
+                    } catch (\Exception $e) {
+                        return;
+                    }
+
                     $sum = $data['sum'];
                     $price = $data['price'];
                     if ($data && $second_currency === 'USD' && $fiatCurrency = $container->isFiat()) {
@@ -259,7 +264,12 @@ abstract class StockExchange implements Exchange
                 $url,
                 null,
                 function($response, $url, $request_info, $user_data, $time) use ($container, $first_currency, $second_currency, $convertCallback, $exchangeName) {
-                    $volume = $container->getTotalVolumeHandle($response, $first_currency, $second_currency);
+                    try {
+                        $volume = $container->getTotalVolumeHandle($response, $first_currency, $second_currency);
+                    } catch (\Exception $e) {
+                        return;
+                    }
+
                     if ($volume) {
                         self::$buffer[$exchangeName]['totalVolume'] = $volume;
                     }
@@ -281,7 +291,11 @@ abstract class StockExchange implements Exchange
                 $url,
                 null,
                 function($response, $url, $request_info, $user_data, $time) use ($container, $first_currency, $second_currency, $convertCallback, $exchangeName) {
-                    $data = $container->getTotalDemandAndOfferHandle($response, $first_currency, $second_currency);
+                    try {
+                        $data = $container->getTotalDemandAndOfferHandle($response, $first_currency, $second_currency);
+                    } catch (\Exception $e) {
+                        return;
+                    }
                     $demand = $data['totalDemand'];
                     if ($data && $second_currency === 'USD' && $fiatCurrency = $container->isFiat()) {
                         if (is_callable($convertCallback)) {
