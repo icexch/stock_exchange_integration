@@ -199,7 +199,7 @@ class Huobi extends StockExchange
         $type = 'step0';
 
         return [
-            'uri' => "/market/depth",
+            'uri' => "market/depth",
             'params' => compact('symbol', 'type'),
         ];
     }
