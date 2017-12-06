@@ -260,8 +260,9 @@ class Kraken extends StockExchange
 
         $sum = round($lastTrade[0] * $lastTrade[1], 8);
         $volume = (float) $lastTrade[1];
+        $price = (float) $lastTrade[0];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**

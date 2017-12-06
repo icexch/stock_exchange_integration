@@ -9,7 +9,7 @@ namespace Warchiefs\StockExchangeIntegration\Containers;
  */
 class Livecoin extends StockExchange
 {
-    public $api_uri = 'https://api.livecoin.net/';
+    public $api_uri = 'https://api.livecoin.net';
 
     public function getAvailableQuotation()
     {
@@ -114,8 +114,9 @@ class Livecoin extends StockExchange
 
         $sum = round($lastTrade['price'] * $lastTrade['quantity'], 8);
         $volume = (float) $lastTrade['quantity'];
+        $price = (float) $lastTrade['price'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**

@@ -10,6 +10,8 @@ namespace Warchiefs\StockExchangeIntegration\Containers;
 class Hitbtc extends StockExchange
 {
     public $api_uri = 'http://api.hitbtc.com/api/1/public';
+    public $v2 = false;
+    public $needV2 = true;
 
     public function getAvailableQuotation()
     {
@@ -110,6 +112,32 @@ class Hitbtc extends StockExchange
         return (float) $response['last'];
     }
 
+    /**
+     * @return string|array
+     */
+    public function getAllPairsPricesUrl()
+    {
+        return [
+            'uri' => "ticker",
+            'params' => [],
+        ];
+    }
+
+    /**
+     * @param $response
+     * @return array|string
+     */
+    public function getAllPairsPricesHandle($response)
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['error'])) {
+            return null;
+        }
+
+        return array_column($response, 'last', 'symbol');
+    }
+
     public function getChartData($first_currency = 'BTC', $second_currency = 'USD')
     {
         return null;
@@ -122,7 +150,7 @@ class Hitbtc extends StockExchange
      * @param string $second_currency
      * @return string
      */
-    private function getPair($first_currency = 'BTC', $second_currency = 'USD')
+    public function getPair($first_currency = 'BTC', $second_currency = 'USD')
     {
         return $first_currency . $second_currency;
     }
@@ -169,8 +197,9 @@ class Hitbtc extends StockExchange
 
         $sum = round($response['trades'][0]['price'] * $response['trades'][0]['amount'], 8);
         $volume = (float) $response['trades'][0]['amount'];
+        $price = (float) $response['trades'][0]['price'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**
@@ -245,5 +274,12 @@ class Hitbtc extends StockExchange
         $totalOffer = array_sum($offersAmounts);
 
         return compact('totalDemand', 'totalOffer');
+    }
+
+    public function changeApiVersionTo2()
+    {
+        $this->api_uri = str_replace('1', 2, $this->api_uri);
+        $this->api_uri = str_replace('http', 'https', $this->api_uri);
+        $this->v2 = true;
     }
 }

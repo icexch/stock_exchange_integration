@@ -45,11 +45,15 @@ interface StockExchange
     /**
      * Return avg of pair from all stock exchanges
      *
-     * @param string $first_currency
-     * @param string $second_currency
-     * @return null|float
+     * @param $data
+     * @param null $convertFiatCallback
+     * @param null $convertCryptoCallback
+     * @param array $exchangesAllPrices
+     * @return float|null
+     * @internal param string $first_currency
+     * @internal param string $second_currency
      */
-    public static function getTickerAverage($first_currency = 'BTC', $second_currency = 'USD');
+    public static function getTickerAverage($data, $convertFiatCallback = null, $convertCryptoCallback = null, $exchangesAllPrices = []);
 
     /**
      * Return price of pair

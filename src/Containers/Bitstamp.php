@@ -157,8 +157,9 @@ class Bitstamp extends StockExchange
 
         $sum = round($response[0]['amount'] * $response[0]['price'], 8);
         $volume = (float) $response[0]['amount'];
+        $price = (float) $response[0]['price'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**

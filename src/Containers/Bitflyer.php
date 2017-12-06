@@ -163,8 +163,9 @@ class Bitflyer extends StockExchange
 
         $sum = round($response[0]['price'] * $response[0]['size'], 8);
         $volume = (float) $response[0]['size'];
+        $price = (float) $response[0]['price'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**

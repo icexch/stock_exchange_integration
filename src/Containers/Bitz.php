@@ -114,8 +114,9 @@ class Bitz extends StockExchange
 
         $sum = round($lastTrade['p'] * $lastTrade['n'], 8);
         $volume = (float) $lastTrade['n'];
+        $price = (float) $lastTrade['p'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**

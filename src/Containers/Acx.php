@@ -108,10 +108,11 @@ class Acx extends StockExchange
             return null;
         }
 
+        $price = (float) $response[0]['price'];
         $sum = (float) $response[0]['funds'];
         $volume = (float) $response[0]['volume'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**

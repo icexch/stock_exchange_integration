@@ -135,8 +135,9 @@ class Coinone extends StockExchange
 
         $sum = round($lastTrade['price'] * $lastTrade['qty'], 8);
         $volume = (float) $lastTrade['qty'];
+        $price = (float) $lastTrade['price'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**

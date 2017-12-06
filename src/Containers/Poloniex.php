@@ -241,6 +241,34 @@ class Poloniex extends StockExchange
     }
 
     /**
+     * @return string|array
+     */
+    public function getAllPairsPricesUrl()
+    {
+        return [
+            'uri' => "returnTicker",
+            'params' => [],
+        ];
+    }
+
+    /**
+     * @param $response
+     * @return array|string
+     */
+    public function getAllPairsPricesHandle($response)
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || !is_array($response) || isset($response['error'])) {
+            return null;
+        }
+
+        $prices = array_column($response, 'last');
+
+        return array_combine(array_keys($response), $prices);
+    }
+
+    /**
      * Get last trade data url
      *
      * @param string $first_currency
@@ -275,8 +303,9 @@ class Poloniex extends StockExchange
 
         $sum = (float) $response[0]['total'];
         $volume = (float) $response[0]['amount'];
+        $price = (float) $response[0]['rate'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**
@@ -370,7 +399,7 @@ class Poloniex extends StockExchange
      * @param $second_currency
      * @return string
      */
-    private function getPair($first_currency, $second_currency)
+    public function getPair($first_currency, $second_currency)
     {
         if ($second_currency === 'USD') {
             $second_currency .= 'T';

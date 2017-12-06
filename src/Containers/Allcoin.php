@@ -112,10 +112,11 @@ class Allcoin extends StockExchange
 
         $lastTrade = $response[0];
 
+        $price = (float) $lastTrade['price'];
         $sum = round($lastTrade['price'] * $lastTrade['amount'], 8);
         $volume = (float) $lastTrade['amount'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**

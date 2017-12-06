@@ -112,8 +112,9 @@ class Yobit extends StockExchange
 
         $sum = round($lastTrade['price'] * $lastTrade['amount'], 8);
         $volume = (float) $lastTrade['amount'];
+        $price = (float) $lastTrade['price'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**

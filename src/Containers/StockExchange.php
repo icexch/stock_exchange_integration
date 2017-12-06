@@ -22,11 +22,10 @@ abstract class StockExchange implements Exchange
 
 	protected static $prices;
 	protected static $buffer;
-
-	private $userAgent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36';
+	protected $userAgent = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36";
 
 	/**
-	 * Construct an url for api request
+	 * Counstruct an url for api request
 	 *
 	 * @param       $method
 	 * @param array $params
@@ -70,175 +69,119 @@ abstract class StockExchange implements Exchange
 	}
 
     /**
-     * Get array of prices
-     *
-     * @param string $first_currency
-     * @param string $second_currency
-     * @param null|callable $convertCallback
-     * @param null|array $only - for return info only from this exchanges
-     * @return array
-     */
-    public static function getAllPrices($first_currency = 'BTC', $second_currency = 'USD', $convertCallback = null, $only = null)
-    {
-        $containers = self::getExchangeContainers();
-
-        $prices = [];
-
-        foreach ($containers as $exchangeName => $container) {
-            if (is_array($only)) {
-                if (!in_array($exchangeName, $only)) {
-                    continue;
-                }
-            }
-            if ($container->isOnlyFiat() && $second_currency !== 'USD') {
-                continue;
-            }
-
-            $price = $container->getPairPrice($first_currency, $second_currency);
-            if ($second_currency === 'USD' && $fiatCurrency = $container->isFiat()) {
-                if ($convertCallback) {
-                    $price = $convertCallback($fiatCurrency, $price);
-                } else {
-                    continue;
-                }
-            }
-            if ($price) {
-                $prices[$exchangeName] = $price;
-            }
-        }
-
-        return $prices;
-    }
-
-    /**
-     * @param string $first_currency
-     * @param string $second_currency
-     * @param null $convertCallback
-     * @param null $only
-     * @param int $timeout
-     * @return mixed
-     */
-    public function getAllPricesAsync($first_currency = 'BTC', $second_currency = 'USD', $convertCallback = null, $only = null, $timeout = 3000)
-    {
-        $containers = self::getExchangeContainers($only);
-
-        $rcx = new RollingCurlX(20);
-        $rcx->setTimeout($timeout);
-        $options = [CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"];
-        foreach ($containers as $exchangeName => $container) {
-		
-	    try {
-		    
-		    if (is_array($only)) {
-			if (!in_array($exchangeName, $only)) {
-			    continue;
-			}
-		    }
-		    if ($container->isOnlyFiat() && $second_currency !== 'USD') {
-			continue;
-		    }
-		    $requestUrl = $container->getPairPriceUrl($first_currency, $second_currency);
-		    if (is_array($requestUrl)) {
-			$url = $container->uri_construct($requestUrl['uri'], $requestUrl['params']);
-		    } else {
-			$url = $container->uri_construct($requestUrl);
-		    }
-
-		    $rcx->addRequest(
-			$url,
-			null,
-			function($response, $url, $request_info, $user_data, $time) use ($container, $first_currency, $second_currency, $convertCallback, $exchangeName) {
-			    $price = $container->getPairPriceHandle($response, $first_currency, $second_currency);
-			    if ($price && $second_currency === 'USD' && $fiatCurrency = $container->isFiat()) {
-				if (is_callable($convertCallback)) {
-				    $price = $convertCallback($fiatCurrency, $price);
-				}
-			    }
-
-			    if ($price) {
-				    self::$prices[$exchangeName] = $price;
-			    }
-			},
-			null,
-			$options,
-			null
-		    );
-	    } catch(\Exception $e) {continue;}	
-        }
-
-        try {
-		$rcx->execute();
-	} catch(\Exception $e) {
-		//
-	}	
-
-        $prices = self::$prices;
-        self::$prices = [];
-
-        return $prices;
-    }
-
-    /**
-     * @param array $data
+     * @param array $data - see data format in config
      * @param null|Callable $convertFiatCallback
      * @param null|Callable $convertCryptoCallback
+     * @param array $exchangesAllPrices - exchanges where we can get all prices from one request
      * @param int $timeout
      * @return array
      */
-    public function getAllPricesAsyncSuper($data, $convertFiatCallback = null, $convertCryptoCallback = null, $timeout = 3000)
+    public function getAllPrices($data, $convertFiatCallback = null, $convertCryptoCallback = null, $exchangesAllPrices = [], $timeout = 10000)
     {
         $containers = self::getExchangeContainers(array_keys($data));
-
         $rcx = new RollingCurlX(10);
         $rcx->setTimeout($timeout);
         $options = [CURLOPT_USERAGENT => $this->userAgent];
         foreach ($data as $exchangeName => $pairs) {
             $container = $containers[$exchangeName];
-            foreach ($pairs as $pair) {
-                try {
-                    if ($container->isOnlyFiat() && $pair[1] !== 'USD') {
-                        continue;
-                    }
-                    $requestUrl = $container->getPairPriceUrl($pair[0], $pair[1]);
-                    if (is_array($requestUrl)) {
-                        $url = $container->uri_construct($requestUrl['uri'], $requestUrl['params']);
-                    } else {
-                        $url = $container->uri_construct($requestUrl);
-                    }
-
-                    $rcx->addRequest(
-                        $url,
-                        null,
-                        function($response, $url, $request_info, $user_data, $time) use ($container, $pair, $convertFiatCallback, $convertCryptoCallback, $exchangeName) {
-                            $price = $container->getPairPriceHandle($response, $pair[0], $pair[1]);
-                            if (!$price) {
-                                return;
+            if (in_array($exchangeName, $exchangesAllPrices, true)) {
+                if ($container->needV2()) {
+                    $container->changeApiVersionTo2();
+                }
+                $requestUrl = $container->getAllPairsPricesUrl($pairs);
+                $url = $container->uri_construct($requestUrl['uri'], $requestUrl['params']);
+                $rcx->addRequest(
+                    $url,
+                    null,
+                    function($response, $url, $request_info, $user_data, $time) use ($container, $pairs, $convertFiatCallback, $convertCryptoCallback, $exchangeName) {
+                        $prices = $container->getAllPairsPricesHandle($response);
+                        foreach ($pairs as $k => $pair) {
+                            // if coins must be replaced
+                            if ($pair[2]) {
+                                $exchangePair = $container->getPair($pair[1], $pair[0]);
+                            } else {
+                                $exchangePair = $container->getPair($pair[0], $pair[1]);
                             }
-                            if ($pair[1] === 'USD') {
-                                if ($fiatCurrency = $container->isFiat()) {
+
+                            $price = $prices[$exchangePair] ?? null;
+
+                            if (!$price) {
+                                continue;
+                            }
+
+                            if ($pair[3] === 'crypto') {
+                                if (is_callable($convertCryptoCallback)) {
+                                    $price = $convertCryptoCallback($pair[1], $price, $pair[4]);
+                                }
+                            } elseif ($pair[3] === 'fiat' || $container->isFiat()) {
+                                $fiatCurrency = $container->isFiat() ?? $pair[1];
+                                if (is_callable($convertFiatCallback)) {
+                                    $price = $convertFiatCallback($fiatCurrency, $price);
+                                }
+                            }
+                            self::$prices[$exchangeName][$k] = round($price, 8);
+                        }
+                    },
+                    null,
+                    $options,
+                    null
+                );
+                continue;
+            } else {
+                foreach ($pairs as $k => $pair) {
+                    try {
+
+                        // if coins must be replaced
+                        if ($pair[2]) {
+                            $requestUrl = $container->getPairPriceUrl($pair[1], $pair[0]);
+                        } else {
+                            $requestUrl = $container->getPairPriceUrl($pair[0], $pair[1]);
+                        }
+
+                        if (is_array($requestUrl)) {
+                            $url = $container->uri_construct($requestUrl['uri'], $requestUrl['params']);
+                        } else {
+                            $url = $container->uri_construct($requestUrl);
+                        }
+
+                        $rcx->addRequest(
+                            $url,
+                            null,
+                            function($response, $url, $request_info, $user_data, $time) use ($container, $pair, $convertFiatCallback, $convertCryptoCallback, $exchangeName, $k) {
+                                // if coins must be replaced
+                                if ($pair[2]) {
+                                    $price = $container->getPairPriceHandle($response, $pair[1], $pair[0]);
+                                } else {
+                                    $price = $container->getPairPriceHandle($response, $pair[0], $pair[1]);
+                                }
+
+                                if (!$price) {
+                                    return;
+                                }
+
+                                if ($pair[3] === 'crypto') {
+                                    if (is_callable($convertCryptoCallback)) {
+                                        $price = $convertCryptoCallback($pair[1], $price, $pair[4]);
+                                    }
+                                } elseif ($pair[3] === 'fiat' || $container->isFiat()) {
+                                    $fiatCurrency = $container->isFiat() ?? $pair[1];
                                     if (is_callable($convertFiatCallback)) {
                                         $price = $convertFiatCallback($fiatCurrency, $price);
                                     }
                                 }
-                            } else {
-                                if (is_callable($convertCryptoCallback)) {
-                                    $inversely = $pair[2];
-                                    $price = $convertCryptoCallback($inversely ? $pair[0] : $pair[1], $price, $inversely);
-                                }
-                            }
-                            self::$prices["{$exchangeName}"]["{$pair[0]}_{$pair[1]}"] = round($price, 8);
-//                            self::$prices["{$exchangeName}_{$pair[0]}_{$pair[1]}"] = round($price, 8);
-                        },
-                        null,
-                        $options,
-                        null
-                    );
-                } catch (\Exception $e) {
-                    continue;
+                                self::$prices[$exchangeName][$k] = round($price, 8);
+                            },
+                            null,
+                            $options,
+                            null
+                        );
+                    } catch (\Exception $e) {
+                        continue;
+                    }
                 }
             }
         }
-        shuffle($rcx->requests);
+
         try {
             $rcx->execute();
         } catch(\Exception $e) {
@@ -252,125 +195,179 @@ abstract class StockExchange implements Exchange
     }
 
     /**
-     * @param string $first_currency
-     * @param $second_currencies
-     * @param null $convertCallback
-     * @param null $only
+     * @param $data - see format in config
+     * @param null $convertFiatCallback
+     * @param null $convertCryptoCallback
      * @param int $timeout
      * @return mixed
      */
-    public function getCoinDataAsync($first_currency = 'BTC', $second_currencies, $convertCallback = null, $only = null, $timeout = 3000)
+    public function getCoinData($data, $convertFiatCallback = null, $convertCryptoCallback = null, $timeout = 3000)
     {
-        $containers = self::getExchangeContainers($only);
-
-        $rcx = new RollingCurlX(30);
+        $containers = self::getExchangeContainers(array_keys($data));
+        $rcx = new RollingCurlX(10);
         $rcx->setTimeout($timeout);
-        $options = [CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"];
-        $first_currency_temp = $first_currency;
-        foreach ($containers as $exchangeName => $container) {
-            $first_currency = $first_currency_temp;
-            if (!empty($second_currencies)) {
-                if (is_array($second_currencies[$exchangeName])) {
-                    $first_currency = $second_currencies[$exchangeName][0];
-                    $second_currency = $second_currencies[$exchangeName][1];
+        $options = [CURLOPT_USERAGENT => $this->userAgent];
+        foreach ($data as $exchangeName => $pairs) {
+            $container = $containers[$exchangeName];
+            foreach ($pairs as $k => $pair) {
+                // if coins must be replaced
+                if ($pair[2]) {
+                    $lastTradeDataUrl = $container->getLastTradeDataUrl($pair[1], $pair[0]);
                 } else {
-                    $second_currency = $second_currencies[$exchangeName];
+                    $lastTradeDataUrl = $container->getLastTradeDataUrl($pair[0], $pair[1]);
                 }
-            } else {
-                $second_currency = 'USD';
-            }
 
-            if (is_array($only)) {
-                if (!in_array($exchangeName, $only)) {
-                    continue;
+                if (is_array($lastTradeDataUrl)) {
+                    $url = $container->uri_construct($lastTradeDataUrl['uri'], $lastTradeDataUrl['params']);
+                } else {
+                    $url = $container->uri_construct($lastTradeDataUrl);
                 }
-            }
-            if ($container->isOnlyFiat() && $second_currency !== 'USD') {
-                continue;
-            }
-            $lastTradeDataUrl = $container->getLastTradeDataUrl($first_currency, $second_currency);
-            if (is_array($lastTradeDataUrl)) {
-                $url = $container->uri_construct($lastTradeDataUrl['uri'], $lastTradeDataUrl['params']);
-            } else {
-                $url = $container->uri_construct($lastTradeDataUrl);
-            }
 
-            $rcx->addRequest(
-                $url,
-                null,
-                function($response, $url, $request_info, $user_data, $time) use ($container, $first_currency, $second_currency, $convertCallback, $exchangeName) {
-                    $data = $container->getLastTradeDataHandle($response, $first_currency, $second_currency);
-                    $sum = $data['sum'];
-                    if ($data && $second_currency === 'USD' && $fiatCurrency = $container->isFiat()) {
-                        if (is_callable($convertCallback)) {
-                            $sum = $convertCallback($fiatCurrency, $sum);
+                $rcx->addRequest(
+                    $url,
+                    null,
+                    function($response, $url, $request_info, $user_data, $time) use ($container, $pair, $convertFiatCallback, $convertCryptoCallback, $exchangeName) {
+                        try {
+                            // if coins must be replaced
+                            if ($pair[2]) {
+                                $data = $container->getLastTradeDataHandle($response, $pair[1], $pair[0]);
+                            } else {
+                                $data = $container->getLastTradeDataHandle($response, $pair[0], $pair[1]);
+                            }
+                        } catch (\Exception $e) {
+                            return;
                         }
-                    }
-                    if ($sum) {
-                        $data['sum'] = $sum;
-                    }
-                    if ($data['sum']) {
-                        self::$buffer[$exchangeName]['lastTradeData'] = $data;
-                    }
-                },
-                null,
-                $options,
-                null
-            );
 
-            $totalVolumeUrl = $container->getTotalVolumeUrl($first_currency, $second_currency);
-            if (is_array($totalVolumeUrl)) {
-                $url = $container->uri_construct($totalVolumeUrl['uri'], $totalVolumeUrl['params']);
-            } else {
-                $url = $container->uri_construct($totalVolumeUrl);
-            }
-
-            $rcx->addRequest(
-                $url,
-                null,
-                function($response, $url, $request_info, $user_data, $time) use ($container, $first_currency, $second_currency, $convertCallback, $exchangeName) {
-                    $volume = $container->getTotalVolumeHandle($response, $first_currency, $second_currency);
-                    if ($volume) {
-                        self::$buffer[$exchangeName]['totalVolume'] = $volume;
-                    }
-                },
-                null,
-                $options,
-                null
-            );
-
-            $totalDemandAndOfferUrl = $container->getTotalDemandAndOfferUrl($first_currency, $second_currency);
-
-            if (is_array($totalDemandAndOfferUrl)) {
-                $url = $container->uri_construct($totalDemandAndOfferUrl['uri'], $totalDemandAndOfferUrl['params']);
-            } else {
-                $url = $container->uri_construct($totalDemandAndOfferUrl);
-            }
-
-            $rcx->addRequest(
-                $url,
-                null,
-                function($response, $url, $request_info, $user_data, $time) use ($container, $first_currency, $second_currency, $convertCallback, $exchangeName) {
-                    $data = $container->getTotalDemandAndOfferHandle($response, $first_currency, $second_currency);
-                    $demand = $data['totalDemand'];
-                    if ($data && $second_currency === 'USD' && $fiatCurrency = $container->isFiat()) {
-                        if (is_callable($convertCallback)) {
-                            $demand = $convertCallback($fiatCurrency, $demand);
+                        if (!$data) {
+                            return;
                         }
-                    }
-                    if ($demand) {
-                        $data['totalDemand'] = $demand;
-                    }
 
-                    if ($data['totalDemand']) {
-                        self::$buffer[$exchangeName]['totalDemandUsd'] = round($data['totalDemand'], 8);
-                        self::$buffer[$exchangeName]['totalOffer'] = $data['totalOffer'];
-                    }
-                },
-                null,
-                $options,
-                null
-            );
+                        $price = $data['price'];
+
+                        if ($pair[3] === 'crypto') {
+                            if (is_callable($convertCryptoCallback)) {
+                                $price = $convertCryptoCallback($pair[1], $price, $pair[4]);
+                            }
+                        } elseif ($pair[3] === 'fiat' || $container->isFiat()) {
+                            $fiatCurrency = $container->isFiat() ?? $pair[1];
+                            if (is_callable($convertFiatCallback)) {
+                                $price = $convertFiatCallback($fiatCurrency, $price);
+                            }
+                        }
+
+                        if ($price) {
+                            $data['price'] = $price;
+                            $data['sum'] = $price * $data['volume'];
+                        }
+
+                        if ($data['price']) {
+                            self::$buffer[$exchangeName]['lastTradeData'] = $data;
+                        }
+                    },
+                    null,
+                    $options,
+                    null
+                );
+
+                // if coins must be replaced
+                if ($pair[2]) {
+                    $totalVolumeUrl = $container->getTotalVolumeUrl($pair[1], $pair[0]);
+                } else {
+                    $totalVolumeUrl = $container->getTotalVolumeUrl($pair[0], $pair[1]);
+                }
+
+                if (is_array($totalVolumeUrl)) {
+                    $url = $container->uri_construct($totalVolumeUrl['uri'], $totalVolumeUrl['params']);
+                } else {
+                    $url = $container->uri_construct($totalVolumeUrl);
+                }
+
+                $rcx->addRequest(
+                    $url,
+                    null,
+                    function($response, $url, $request_info, $user_data, $time) use ($container, $pair, $convertFiatCallback, $convertCryptoCallback, $exchangeName) {
+                        try {
+                            // if coins must be replaced
+                            if ($pair[2]) {
+                                $volume = $container->getTotalVolumeHandle($response, $pair[1], $pair[0]);
+                            } else {
+                                $volume = $container->getTotalVolumeHandle($response, $pair[0], $pair[1]);
+                            }
+                        } catch (\Exception $e) {
+                            return;
+                        }
+
+                        if ($volume) {
+                            self::$buffer[$exchangeName]['totalVolume'] = $volume;
+                        }
+                    },
+                    null,
+                    $options,
+                    null
+                );
+
+                // if coins must be replaced
+                if ($pair[2]) {
+                    $totalDemandAndOfferUrl = $container->getTotalDemandAndOfferUrl($pair[1], $pair[0]);
+                } else {
+                    $totalDemandAndOfferUrl = $container->getTotalDemandAndOfferUrl($pair[0], $pair[1]);
+                }
+
+                if (is_array($totalDemandAndOfferUrl)) {
+                    $url = $container->uri_construct($totalDemandAndOfferUrl['uri'], $totalDemandAndOfferUrl['params']);
+                } else {
+                    $url = $container->uri_construct($totalDemandAndOfferUrl);
+                }
+
+                $rcx->addRequest(
+                    $url,
+                    null,
+                    function($response, $url, $request_info, $user_data, $time) use ($container, $pair, $convertFiatCallback, $convertCryptoCallback, $exchangeName) {
+                        try {
+                            // if coins must be replaced
+                            if ($pair[2]) {
+                                $data = $container->getTotalDemandAndOfferHandle($response, $pair[1], $pair[0]);
+                            } else {
+                                $data = $container->getTotalDemandAndOfferHandle($response, $pair[0], $pair[1]);
+                            }
+                        } catch (\Exception $e) {
+                            return;
+                        }
+
+                        if (!$data) {
+                            return;
+                        }
+
+                        $demand = $data['totalDemand'];
+
+                        if ($pair[3] === 'crypto') {
+                            if ($exchangeName === 'huobi' && $pair[0] === 'BTC') {
+                                $pair[4] = false;
+                            }
+                            if (is_callable($convertCryptoCallback)) {
+                                $demand = $convertCryptoCallback($pair[1], $demand, $pair[4]);
+                            }
+                        } elseif ($pair[3] === 'fiat' || $container->isFiat()) {
+                            $fiatCurrency = $container->isFiat() ?? $pair[1];
+                            if (is_callable($convertFiatCallback)) {
+                                $demand = $convertFiatCallback($fiatCurrency, $demand);
+                            }
+                        }
+
+                        if ($demand) {
+                            $data['totalDemand'] = $demand;
+                        }
+
+                        if ($data['totalDemand']) {
+                            self::$buffer[$exchangeName]['totalDemandUsd'] = round($data['totalDemand'], 8);
+                            self::$buffer[$exchangeName]['totalOffer'] = $data['totalOffer'];
+                        }
+                    },
+                    null,
+                    $options,
+                    null
+                );
+            }
         }
 
         $rcx->execute();
@@ -384,21 +381,29 @@ abstract class StockExchange implements Exchange
     /**
      * Return avg of pair from all stock exchanges
      *
-     * @param string $first_currency
-     * @param string $second_currency
-     * @param null|callable $convertCallback
-     * @param null|array $only
-     * @return null|float
+     * @param $data - see data format in config
+     * @param null $convertFiatCallback
+     * @param null $convertCryptoCallback
+     * @param array $exchangesAllPrices
+     * @return float|null
      */
-    public static function getTickerAverage($first_currency = 'BTC', $second_currency = 'USD', $convertCallback = null, $only = null)
+    public static function getTickerAverage($data, $convertFiatCallback = null, $convertCryptoCallback = null, $exchangesAllPrices = [])
     {
-        $prices = self::getAllPrices($first_currency, $second_currency, $convertCallback, $only);
+        $allPrices = self::getAllPrices($data, $convertFiatCallback, $convertCryptoCallback, $exchangesAllPrices);
 
-        if (count($prices) === 0) {
+        if (!count($allPrices)) {
             return null;
         }
 
-        return round(array_sum($prices) / count($prices), 8);
+        $prices_list = [];
+
+        foreach ($allPrices as $prices) {
+            foreach ($prices as $price) {
+                $prices_list[] = $price;
+            }
+        }
+
+        return round(array_sum($prices_list) / count($prices_list), 8);
     }
 
     /**
@@ -438,6 +443,7 @@ abstract class StockExchange implements Exchange
             $config = require_once('../Config/exchange.php');
             $availableStocks = $config['available'];
         }
+        $availableStocks = array_keys($availableStocks);
 
         $containers = [];
 
@@ -555,5 +561,13 @@ abstract class StockExchange implements Exchange
     public function isFiat()
     {
         return $this->fiat;
+    }
+
+    /**
+     * @return bool
+     */
+    public function needV2()
+    {
+        return $this->needV2 ?? false;
     }
 }

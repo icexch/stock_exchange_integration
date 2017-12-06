@@ -146,8 +146,9 @@ class Bithumb extends StockExchange
 
         $sum = (float) $response['data'][0]['total'];
         $volume = (float) $response['data'][0]['units_traded'];
+        $price = (float) $response['data'][0]['price'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**

@@ -133,8 +133,9 @@ class Btc38 extends StockExchange
 
         $sum = round($lastTrade['price'] * $lastTrade['amount'], 8);
         $volume = $lastTrade['amount'];
+        $price = $lastTrade['price'];
 
-        return compact('sum', 'volume');
+        return compact('sum', 'volume', 'price');
     }
 
     /**

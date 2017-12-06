@@ -18,7 +18,7 @@ class StockExchangeIntegrationProvider extends ServiceProvider
 		    __DIR__.'/Config/exchange.php' => config_path('exchange.php'),
 	    ]);
 
-        foreach (config('exchange.available') as $exchange) {
+        foreach (array_keys(config('exchange.available')) as $exchange) {
             $exchangeClassName = ucfirst($exchange);
             $exchange_path = __NAMESPACE__ . '\\Containers\\' . $exchangeClassName;
 
