@@ -74,12 +74,13 @@ abstract class StockExchange implements Exchange
      * @param null|Callable $convertCryptoCallback
      * @param array $exchangesAllPrices - exchanges where we can get all prices from one request
      * @param int $timeout
+     * @param int $concurrent_requests
      * @return array
      */
-    public function getAllPrices($data, $convertFiatCallback = null, $convertCryptoCallback = null, $exchangesAllPrices = [], $timeout = 10000)
+    public function getAllPrices($data, $convertFiatCallback = null, $convertCryptoCallback = null, $exchangesAllPrices = [], $timeout = 10000, $concurrent_requests = 30)
     {
         $containers = self::getExchangeContainers(array_keys($data));
-        $rcx = new RollingCurlX(10);
+        $rcx = new RollingCurlX($concurrent_requests);
         $rcx->setTimeout($timeout);
         $options = [CURLOPT_USERAGENT => $this->userAgent];
         foreach ($data as $exchangeName => $pairs) {
@@ -181,6 +182,9 @@ abstract class StockExchange implements Exchange
                 }
             }
         }
+        print_r('<pre>');
+        print_r(array_column($rcx->requests, 'url'));
+        print_r('</pre>');
 
         try {
             $rcx->execute();
@@ -199,12 +203,13 @@ abstract class StockExchange implements Exchange
      * @param null $convertFiatCallback
      * @param null $convertCryptoCallback
      * @param int $timeout
+     * @param int $concurrent_requests
      * @return mixed
      */
-    public function getCoinData($data, $convertFiatCallback = null, $convertCryptoCallback = null, $timeout = 3000)
+    public function getCoinData($data, $convertFiatCallback = null, $convertCryptoCallback = null, $timeout = 3000, $concurrent_requests = 10)
     {
         $containers = self::getExchangeContainers(array_keys($data));
-        $rcx = new RollingCurlX(10);
+        $rcx = new RollingCurlX($concurrent_requests);
         $rcx->setTimeout($timeout);
         $options = [CURLOPT_USERAGENT => $this->userAgent];
         foreach ($data as $exchangeName => $pairs) {
