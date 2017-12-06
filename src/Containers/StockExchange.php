@@ -182,9 +182,6 @@ abstract class StockExchange implements Exchange
                 }
             }
         }
-        print_r('<pre>');
-        print_r(array_column($rcx->requests, 'url'));
-        print_r('</pre>');
 
         try {
             $rcx->execute();
