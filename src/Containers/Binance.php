@@ -82,6 +82,32 @@ class Binance extends StockExchange
         return (float) $prices[$pair];
     }
 
+    /**
+     * @return string|array
+     */
+    public function getAllPairsPricesUrl()
+    {
+        return [
+            'uri' => "ticker/allPrices",
+            'params' => [],
+        ];
+    }
+
+    /**
+     * @param $response
+     * @return array|string
+     */
+    public function getAllPairsPricesHandle($response)
+    {
+        $response = json_decode($response, true);
+
+        if (!$response) {
+            return null;
+        }
+
+        return array_column($response, 'price', 'symbol');
+    }
+
     public function getChartData($first_currency = 'BTC', $second_currency = 'USDT')
     {
         return null;
@@ -216,7 +242,7 @@ class Binance extends StockExchange
      * @param string $second_currency
      * @return string
      */
-    private function getPair($first_currency = 'BTC', $second_currency = 'USDT')
+    public function getPair($first_currency = 'BTC', $second_currency = 'USDT')
     {
         if ($second_currency === 'USD') {
             $second_currency .= 'T';

@@ -13,6 +13,8 @@ class Bitfinex extends StockExchange
 {
 
 	public $api_uri = 'https://api.bitfinex.com/v1';
+	public $v2 = false;
+	public $needV2 = true;
 
 
     /**
@@ -167,6 +169,45 @@ class Bitfinex extends StockExchange
     }
 
     /**
+     * @return string|array
+     */
+    public function getAllPairsPricesUrl($pairs)
+    {
+        $symbols = "";
+
+        foreach ($pairs as $k => $pair) {
+            if ($k > 0) {
+                $symbols .= ',';
+            }
+            if ($pair[2]) {
+                $symbols .= $this->getPair($pair[1], $pair[0]);
+            } else {
+                $symbols .= $this->getPair($pair[0], $pair[1]);
+            }
+        }
+
+        return [
+            'uri' => "tickers",
+            'params' => compact('symbols'),
+        ];
+    }
+
+    /**
+     * @param $response
+     * @return array|string
+     */
+    public function getAllPairsPricesHandle($response)
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || isset($response['message'])) {
+            return null;
+        }
+
+        return array_column($response, 7, 0);
+    }
+
+    /**
      * Get last trade data handle
      *
      * @param string $response
@@ -263,7 +304,7 @@ class Bitfinex extends StockExchange
         return compact('totalDemand', 'totalOffer');
     }
 
-    private function getPair($first_currency = 'BTC', $second_currency = 'USD')
+    public function getPair($first_currency = 'BTC', $second_currency = 'USD')
     {
         if ($first_currency === 'DASH') {
             $first_currency = 'dsh';
@@ -279,6 +320,16 @@ class Bitfinex extends StockExchange
             $second_currency = 'QTM';
         }
 
+        if ($this->v2) {
+            return 't' . strtoupper($first_currency . $second_currency);
+        }
+
         return strtolower($first_currency . $second_currency);
+    }
+
+    public function changeApiVersionTo2()
+    {
+        $this->api_uri = str_replace('1', 2, $this->api_uri);
+        $this->v2 = true;
     }
 }

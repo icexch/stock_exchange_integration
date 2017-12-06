@@ -11,462 +11,357 @@ return [
         'bitconnect', 'livecoin', 'novaexchange',
         'allcoin', 'bitcoinco', 'yobit', 'bitz',
         'bitbay', 'tidex', 'btc018', 'acx',
+        'okex', 'coinnest',
     */
 
     'available' => [
-        'kraken', 'poloniex', 'bithumb',
-        'bitfinex', 'bitflyer', 'okcoin',
-        'bitstamp', 'bittrex', 'gdax',
-        'gemini', 'hitbtc', 'korbit',
-        'coinone', 'binance', 'huobi',
-        'zaif', 'btc38', 'okcoincn',
-        'bitconnect', 'livecoin', 'novaexchange',
-        'allcoin', 'bitcoinco', 'yobit', 'bitz',
-        'bitbay', 'tidex', 'btc018', 'acx',
+        'kraken' => [
+            'url' => 'https://www.kraken.com',
+        ],
+        'poloniex' => [
+            'url' => 'https://poloniex.com',
+        ],
+        'bithumb' => [
+            'url' => 'https://www.bithumb.com',
+        ],
+        'bitfinex' => [
+            'url' => 'https://www.bitfinex.com',
+        ],
+        'bitflyer' => [
+            'url' => 'https://bitflyer.jp',
+        ],
+        'okcoin' => [
+            'url' => 'https://www.okcoin.com',
+        ],
+        'bitstamp' => [
+            'url' => 'https://www.bitstamp.net',
+        ],
+        'bittrex' => [
+            'url' => 'https://bittrex.com',
+        ],
+        'gdax' => [
+            'url' => 'https://www.gdax.com',
+        ],
+        'gemini' => [
+            'url' => 'https://gemini.com',
+        ],
+        'hitbtc' => [
+            'url' => 'https://hitbtc.com',
+        ],
+        'korbit' => [
+            'url' => 'https://www.korbit.co.kr',
+        ],
+        'coinone' => [
+            'url' => 'https://coinone.co.kr',
+        ],
+        'binance' => [
+            'url' => 'https://www.binance.com',
+        ],
+        'huobi' => [
+            'url' => 'https://www.huobi.pro',
+        ],
+        'zaif' => [
+            'url' => 'https://zaif.jp',
+        ],
+        'btc38' => [
+            'url' => 'http://www.btc38.com',
+        ],
+        'okcoincn' => [
+            'url' => 'https://www.okcoin.cn',
+        ],
+        'bitconnect' => [
+            'url' => 'https://www.bitconnect.co',
+        ],
+        'livecoin' => [
+            'url' => 'https://www.livecoin.net',
+        ],
+        'novaexchange' => [
+            'url' => 'https://novaexchange.com',
+        ],
+        'allcoin' => [
+            'url' => 'https://www.allcoin.com',
+        ],
+        'bitcoinco' => [
+            'url' => 'https://www.bitcoin.co.id',
+        ],
+        'yobit' => [
+            'url' => 'https://yobit.net',
+        ],
+        'bitz' => [
+            'url' => 'https://www.bit-z.com',
+        ],
+        'bitbay' => [
+            'url' => 'https://bitbay.net',
+        ],
+        'tidex' => [
+            'url' => 'https://tidex.com',
+        ],
+        'btc018' => [
+            'url' => 'https://btc018.com',
+        ],
+        'acx' => [
+            'url' => 'https://acx.io',
+        ],
+        'okex' => [
+            'url' => 'https://www.okex.com',
+        ],
+        'coinnest' => [
+            'url' => 'https://www.coinnest.co.kr',
+        ],
     ],
+
     'selected' => 'bithumb',
 
     'default' => 'poloniex',
 
-    'coinsExchanges' => [
-        'BTC' => [
-            'bitfinex', 'bithumb', 'bitflyer',
-            'okcoin', 'bitstamp', 'bittrex',
-            'gdax', 'gemini', 'kraken',
-            'poloniex', 'hitbtc', 'korbit',
-            'coinone', 'binance',
+    /*
+     * format:
+     * 'exchange' => [
+     *     [
+     *         first currency,
+     *         second currency,
+     *         replace currencies(BTC_USD <=> USD_BTC),
+     *         convert pair price by second currency('fiat'(KRW, CNY and etc), 'crypto'(BTC, ETH and etc) or false to off converting),
+     *         inversely cryptocurrency converting(false - $pairPrice * $secondCurrencyPrice, true - $secondCurrencyPrice / $pairPrice)
+     *     ],
+     *     ...
+     * ]
+     * */
+    'exchanges_pairs' => [
+        'kraken' => [
+            ['BTC', 'USD', false, false, false],
+            ['ETC', 'USD', false, false, false],
+            ['ETH', 'USD', false, false, false],
+            ['DASH', 'USD', false, false, false],
+            ['LTC', 'USD', false, false, false],
+            ['XLM', 'BTC', false, 'crypto', false],
+            ['XRP', 'USD', false, false, false],
+            ['XMR', 'USD', false, false, false],
+            ['ZEC', 'USD', false, false, false],
+            ['ZEC', 'EUR', false, 'fiat', false],
+            ['ZEC', 'BTC', false, 'crypto', false],
         ],
-        'ETH' => [
-            'bitfinex', 'bithumb',
-            'okcoincn', 'bitstamp', 'bittrex',
-            'gdax', 'gemini', 'kraken',
-            'poloniex', 'coinone', 'huobi',
+        'poloniex' => [
+            ['BTC', 'USD', false, false, false],
+            ['BCH', 'USD', false, false, false],
+            ['ETC', 'USD', false, false, false],
+            ['ETH', 'USD', false, false, false],
+            ['DASH', 'USD', false, false, false],
+            ['LTC', 'USD', false, false, false],
+            ['XLM', 'USD', false, false, false],
+            ['XLM', 'BTC', true, 'crypto', false],
+            ['XRP', 'USD', false, false, false],
+            ['XMR', 'USD', false, false, false],
+            ['STRAT', 'BTC', true, 'crypto', false],
+            ['BCN', 'BTC', true, 'crypto', false],
+            ['BTS', 'BTC', true, 'crypto', false],
+            ['LSK', 'BTC', true, 'crypto', false],
+            ['ZEC', 'USD', false, false, false],
+            ['ZEC', 'BTC', true, 'crypto', false],
+            ['STEEM', 'BTC', true, 'crypto', false],
+            ['DCR', 'BTC', true, 'crypto', false],
+            ['FCT', 'BTC', true, 'crypto', false],
+            ['XEM', 'BTC', true, 'crypto', false],
         ],
-        'XRP' => [
-            'bithumb', 'korbit',
-            'bittrex','kraken',
-            'poloniex', 'coinone',
+        'bithumb' => [
+            ['BTC', 'KRW', false, 'fiat', false],
+            ['BCH', 'KRW', false, 'fiat', false],
+            ['ETH', 'KRW', false, 'fiat', false],
+            ['ETC', 'KRW', false, 'fiat', false],
+            ['DASH', 'KRW', false, 'fiat', false],
+            ['LTC', 'KRW', false, 'fiat', false],
+            ['XRP', 'KRW', false, 'fiat', false],
+            ['XMR', 'KRW', false, 'fiat', false],
+            ['ZEC', 'KRW', false, 'fiat', false],
         ],
-        'BCH' => [
-            'bitfinex', 'bithumb',
-            'okcoincn', 'bittrex',
-            'poloniex', 'hitbtc', 'korbit',
-            'coinone', 'huobi',
+        'bitfinex' => [
+            ['BTC', 'USD', false, false, false],
+            ['BCH', 'USD', false, false, false],
+            ['ETH', 'USD', false, false, false],
+            ['ETC', 'USD', false, false, false],
+            ['DASH', 'USD', false, false, false],
+            ['LTC', 'USD', false, false, false],
+            ['XMR', 'USD', false, false, false],
+            ['IOT', 'USD', false, false, false],
+            ['IOT', 'BTC', false, 'crypto', false],
+            ['IOT', 'ETH', false, 'crypto', false],
+            ['NEO', 'USD', false, false, false],
+            ['QTUM', 'USD', false, false, false],
+            ['QTUM', 'BTC', false, 'crypto', false],
+            ['ZEC', 'USD', false, false, false],
+            ['ZEC', 'BTC', false, 'crypto', false],
+            ['BTG', 'USD', false, false, false],
+            ['BTG', 'BTC', false, 'crypto', false],
         ],
-        'LTC' => [
-            'gdax', 'bithumb', 'bitstamp',
-            'okcoincn', 'poloniex', 'hitbtc',
-            /*'huobi',*/ 'bitfinex', 'kraken',
+        'bitflyer' => [
+            ['BTC', 'USD', false, false, false],
         ],
-        'DASH' => [
-            'bithumb', 'poloniex', 'hitbtc',
-            'bitfinex', 'kraken',
+        'okcoin' => [
+            ['BTC', 'USD', false, false, false],
         ],
-        'XEM' => [
-            'zaif', 'hitbtc', 'btc38',
+        'bitstamp' => [
+            ['BTC', 'USD', false, false, false],
+            ['ETH', 'USD', false, false, false],
+            ['LTC', 'USD', false, false, false],
         ],
-        'XMR' => [
-            'bitfinex', 'hitbtc', 'kraken',
-            'poloniex', 'bithumb'
+        'bittrex' => [
+            ['BTC', 'USD', false, false, false],
+            ['BCH', 'USD', false, false, false],
+            ['ETH', 'USD', false, false, false],
+            ['ETC', 'USD', false, false, false],
+            ['XLM', 'BTC', false, 'crypto', false],
+            ['XLM', 'ETH', false, 'crypto', false],
+            ['XRP', 'USD', false, false, false],
+            ['STRAT', 'BTC', false, 'crypto', false],
+            ['WAVES', 'BTC', false, 'crypto', false],
+            ['BTS', 'BTC', false, 'crypto', false],
+            ['NEO', 'USD', false, false, false],
+            ['NEO', 'BTC', false, 'crypto', false],
+            ['NEO', 'ETH', false, 'crypto', false],
+            ['QTUM', 'BTC', false, 'crypto', false],
+            ['QTUM', 'ETH', false, 'crypto', false],
+            ['ADA', 'BTC', false, 'crypto', false],
+            ['LSK', 'BTC', false, 'crypto', false],
+            ['ZEC', 'USD', false, false, false],
+            ['ZEC', 'BTC', false, 'crypto', false],
+            ['ARK', 'BTC', false, 'crypto', false],
+            ['STEEM', 'BTC', false, 'crypto', false],
+            ['PIVX', 'BTC', false, 'crypto', false],
+            ['KMD', 'BTC', false, 'crypto', false],
+            ['DCR', 'BTC', false, 'crypto', false],
+            ['FCT', 'BTC', false, 'crypto', false],
+            ['XEM', 'BTC', false, 'crypto', false],
+            ['BTG', 'USD', false, false, false],
+            ['BTG', 'BTC', false, 'crypto', false],
         ],
-        'NEO' => [
-            'bitfinex', 'bittrex'
+        'gdax' => [
+            ['BTC', 'USD', false, false, false],
+            ['ETH', 'USD', false, false, false],
+            ['LTC', 'USD', false, false, false],
         ],
-        'ETC' => [
-            'okcoincn', 'bithumb', 'coinone',
-            'huobi', 'bitfinex', 'poloniex',
-            'korbit', 'bittrex', 'kraken',
+        'gemini' => [
+            ['BTC', 'USD', false, false, false],
+            ['ETH', 'USD', false, false, false],
         ],
-        'IOT' => [
-            'bitfinex',
+        'hitbtc' => [
+            ['BTC', 'USD', false, false, false],
+            ['BCH', 'USD', false, false, false],
+            ['DASH', 'USD', false, false, false],
+            ['LTC', 'USD', false, false, false],
+            ['XMR', 'USD', false, false, false],
+            ['NEO', 'USD', false, false, false],
+            ['STRAT', 'BTC', false, 'crypto', false],
+            ['BCN', 'USD', false, false, false],
+            ['BCN', 'BTC', false, 'crypto', false],
+            ['LSK', 'BTC', false, 'crypto', false],
+            ['ZEC', 'USD', false, false, false],
+            ['ZEC', 'BTC', false, 'crypto', false],
+            ['XEM', 'USD', false, false, false],
+            ['BTG', 'USD', false, false, false],
+            ['BTG', 'BTC', false, 'crypto', false],
         ],
-        'QTUM' => [
-            'coinone', 'bitfinex',
+        'korbit' => [
+            ['BTC', 'KRW', false, 'fiat', false],
+            ['BCH', 'KRW', false, 'fiat', false],
+            ['ETC', 'KRW', false, 'fiat', false],
+            ['XRP', 'KRW', false, 'fiat', false],
         ],
-        'XLM' => [
-            'poloniex', 'btc38',
+        'coinone' => [
+            ['BTC', 'USD', false, false, false],
+            ['BCH', 'USD', false, false, false],
+            ['ETH', 'USD', false, false, false],
+            ['ETC', 'USD', false, false, false],
+            ['XRP', 'USD', false, false, false],
+            ['QTUM', 'USD', false, false, false],
         ],
-        'ZEC' => [
-            'hitbtc', 'bithumb', 'bitfinex',
-            'poloniex', 'bittrex', 'kraken',
+        'binance' => [
+            ['BTC', 'USD', false, false, false],
+            ['STRAT', 'BTC', false, 'crypto', false],
+            ['IOT', 'BTC', false, 'crypto', false],
+            ['IOT', 'ETH', false, 'crypto', false],
+            ['NEO', 'BTC', false, 'crypto', false],
+            ['QTUM', 'BTC', false, 'crypto', false],
+            ['BTG', 'BTC', false, 'crypto', false],
         ],
-        'HSR' => [
-            'btc018', 'acx',
+        'huobi' => [
+            ['BTC', 'ETH', true, 'crypto', true],
+            ['BCH', 'CNY', false, 'fiat', false], // бред отвечает(418 usd) https://be.huobi.com/market/detail?symbol=bcccny
+            ['ETH', 'CNY', false, 'fiat', false], // бред отвечает(290 usd) https://be.huobi.com/market/detail?symbol=ethcny
+            ['ETC', 'CNY', false, 'fiat', false], // бред отвечает(9 usd) https://be.huobi.com/market/detail?symbol=etccny
+            ['LTC', 'BTC', false, 'crypto', false],
         ],
-        'BCN' => [
-            'hitbtc',
+        'zaif' => [
+            ['XEM', 'JPY', false, false, false],
         ],
-        'BTS' => [
-            'btc38',
+        'bitconnect' => [
+            ['BCC', 'BTC', true, 'crypto', false],
+        ],
+        'livecoin' => [
+            ['BCC', 'BTC', false, 'crypto', false],
+            ['LSK', 'BTC', false, 'crypto', false],
+            ['FRST', 'BTC', false, 'crypto', false],
+        ],
+        'novaexchange' => [
+            ['BCC', 'BTC', true, 'crypto', false],
+        ],
+        'allcoin' => [
+            ['QTUM', 'BTC', false, 'crypto', false],
+            ['HSR', 'BTC', false, 'crypto', false],
+        ],
+        'bitcoinco' => [
+            ['XLM', 'BTC', false, 'crypto', false],
+            ['BTG', 'IDR', false, 'fiat', false],
+        ],
+        'yobit' => [
+            ['WAVES', 'BTC', false, 'crypto', false],
+            ['LSK', 'BTC', false, 'crypto', false],
+            ['BTG', 'BTC', false, 'crypto', false],
+        ],
+        'bitz' => [
+            ['LSK', 'BTC', false, 'crypto', false],
+            ['HSR', 'BTC', false, 'crypto', false],
+            ['FCT', 'BTC', false, 'crypto', false],
+        ],
+        'bitbay' => [
+            ['LSK', 'PLN', false, 'fiat', false],
+        ],
+        'tidex' => [
+            ['WAVES', 'BTC', false, 'crypto', false],
+        ],
+        'acx' => [
+            ['HSR', 'USD', false, false, false],
+        ],
+        'okex' => [
+            ['BTG', 'BTC', false, 'crypto', false],
+        ],
+        'coinnest' => [
+            ['BTG', 'KRW', false, false, false],
+            ['NEO', 'KRW', false, false, false],
+        ],
+        'okcoincn' => [
+            ['BCH', 'CNY', false, 'fiat', false],
+            ['ETH', 'CNY', false, 'fiat', false],
+            ['ETC', 'CNY', false, 'fiat', false],
+            ['LTC', 'CNY', false, 'fiat', false],
+        ],
+        'btc018' => [
+            ['HSR', 'CNY', false, false, false],
+        ],
+        'btc38' => [ // ответы пустые
+            ['XLM', 'CNY', false, false, false],
+            ['BTS', 'CNY', false, false, false],
+            ['XEM', 'CNY', false, false, false],
         ],
     ],
 
-    'coinsConverts' => [
-        'BTC' => [
-            [
-                'exchange' => 'huobi',
-                'to'       => 'ETH',
-            ],
-        ],
-        'XEM' => [
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'poloniex',
-                'to'       => 'BTC',
-                'increase' => true,
-            ],
-        ],
-        'NEO' => [
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'ETH',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'binance',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-        ],
-        'LTC' => [
-            [
-                'exchange' => 'huobi',
-                'to'       => 'BTC',
-            ],
-        ],
-        'BCC' => [
-            [
-                'exchange' => 'bitconnect',
-                'to'       => 'BTC',
-                'from_icex' => true,
-                'increase' => true,
-            ],
-            [
-                'exchange' => 'livecoin',
-                'to'       => 'BTC',
-                'from_icex' => true,
-                'change' => true,
-            ],
-            [
-                'exchange' => 'novaexchange',
-                'to'       => 'BTC',
-                'from_icex' => true,
-                'increase' => true,
-            ],
-        ],
-        'IOT' => [
-            [
-                'exchange' => 'bitfinex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'bitfinex',
-                'to'       => 'ETH',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'binance',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'binance',
-                'to'       => 'ETH',
-                'change' => true,
-            ],
-        ],
-        'QTUM' => [
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'ETH',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'binance',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'allcoin',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'bitfinex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-        ],
-        'ADA' => [
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-        ],
-        'XLM' => [
-            [
-                'exchange' => 'poloniex',
-                'to'       => 'BTC',
-                'increase' => true,
-            ],
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'ETH',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'kraken',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'bitcoinco',
-                'to'       => 'BTC',
-                'change' => true,
-                'from_icex' => true,
-            ],
-        ],
-        'LSK' => [
-            [
-                'exchange' => 'yobit',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'poloniex',
-                'to'       => 'BTC',
-                'increase' => true,
-            ],
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'bitz',
-                'to'       => 'BTC',
-                'change' => true,
-                'from_icex' => true,
-            ],
-            [
-                'exchange' => 'livecoin',
-                'to'       => 'BTC',
-                'change' => true,
-                'from_icex' => true,
-            ],
-            [
-                'exchange' => 'hitbtc',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'bitbay',
-                'to'       => 'PLN',
-                'fiat' => true,
-                'change' => true,
-            ],
-        ],
-        'ZEC' => [
-            [
-                'exchange' => 'hitbtc',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'bitfinex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'poloniex',
-                'to'       => 'BTC',
-                'increase' => true,
-            ],
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'kraken',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'kraken',
-                'to'       => 'EUR',
-                'fiat' => true,
-                'change' => true,
-            ],
-        ],
-        'WAVES' => [
-            [
-                'exchange' => 'tidex',
-                'to'       => 'BTC',
-                'change' => true,
-                'from_icex' => true,
-            ],
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'yobit',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-        ],
-        'HSR' => [
-            [
-                'exchange' => 'allcoin',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'bitz',
-                'to'       => 'BTC',
-                'change' => true,
-                'from_icex' => true,
-            ],
-        ],
-        'STRAT' => [
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'poloniex',
-                'to'       => 'BTC',
-                'increase' => true,
-            ],
-            [
-                'exchange' => 'binance',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'hitbtc',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-        ],
-        'ARK' => [
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-        ],
-        'STEEM' => [
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'poloniex',
-                'to'       => 'BTC',
-                'increase' => true,
-            ],
-        ],
-        'BCN' => [
-            [
-                'exchange' => 'hitbtc',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'poloniex',
-                'to'       => 'BTC',
-                'increase' => true,
-            ],
-        ],
-        'PIVX' => [
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-        ],
-        'KMD' => [
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-        ],
-        'FRST' => [
-            [
-                'exchange' => 'livecoin',
-                'to'       => 'BTC',
-                'change' => true,
-                'from_icex' => true,
-            ],
-        ],
-        'DCR' => [
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'poloniex',
-                'to'       => 'BTC',
-                'increase' => true,
-            ],
-        ],
-        'FCT' => [
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'bitz',
-                'to'       => 'BTC',
-                'change' => true,
-                'from_icex' => true,
-            ],
-            [
-                'exchange' => 'poloniex',
-                'to'       => 'BTC',
-                'increase' => true,
-            ],
-        ],
-        'BTS' => [
-            [
-                'exchange' => 'bittrex',
-                'to'       => 'BTC',
-                'change' => true,
-            ],
-            [
-                'exchange' => 'poloniex',
-                'to'       => 'BTC',
-                'increase' => true,
-            ],
-        ],
+    /*
+     * exchanges that have endpoint with all pairs prices
+     * */
+    'exchanges_all_prices' => [
+        'bittrex',
+        'poloniex',
+        'bitfinex',
+        'hitbtc',
+        'binance',
     ],
 ];

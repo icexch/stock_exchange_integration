@@ -9,7 +9,7 @@ namespace Warchiefs\StockExchangeIntegration\Containers;
  */
 class Livecoin extends StockExchange
 {
-    public $api_uri = 'https://api.livecoin.net/';
+    public $api_uri = 'https://api.livecoin.net';
 
     public function getAvailableQuotation()
     {

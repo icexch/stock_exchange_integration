@@ -99,6 +99,32 @@ class Bittrex extends StockExchange
         return (float) $response['result']['Last'];
     }
 
+    /**
+     * @return string|array
+     */
+    public function getAllPairsPricesUrl()
+    {
+        return [
+            'uri' => "getmarketsummaries",
+            'params' => [],
+        ];
+    }
+
+    /**
+     * @param $response
+     * @return array|string
+     */
+    public function getAllPairsPricesHandle($response)
+    {
+        $response = json_decode($response, true);
+
+        if (!$response || $response['success'] !== true) {
+            return null;
+        }
+
+        return array_column($response['result'], 'Last' ,'MarketName');
+    }
+
     public function getChartData($first_currency = 'BTC', $second_currency = 'USD')
     {
         return null;
@@ -111,7 +137,7 @@ class Bittrex extends StockExchange
      * @param string $second_currency
      * @return string
      */
-    private function getPair($first_currency = 'BTC', $second_currency = 'USD')
+    public function getPair($first_currency = 'BTC', $second_currency = 'USD')
     {
         if ($second_currency === 'USD') {
             $second_currency .= 'T';
