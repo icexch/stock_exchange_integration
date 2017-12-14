@@ -11,7 +11,7 @@ return [
         'bitconnect', 'livecoin', 'novaexchange',
         'allcoin', 'bitcoinco', 'yobit', 'bitz',
         'bitbay', 'tidex', 'btc018', 'acx',
-        'okex', 'coinnest',
+        'okex', 'coinnest', 'coinfalcon',
     */
 
     'available' => [
@@ -107,6 +107,9 @@ return [
         ],
         'coinnest' => [
             'url' => 'https://www.coinnest.co.kr',
+        ],
+        'coinfalcon' => [
+            'url' => 'https://coinfalcon.com',
         ],
     ],
 
@@ -266,13 +269,14 @@ return [
             ['ETC', 'KRW', false, 'fiat', false],
             ['XRP', 'KRW', false, 'fiat', false],
         ],
-        'coinone' => [
-            ['BTC', 'USD', false, false, false],
-            ['BCH', 'USD', false, false, false],
-            ['ETH', 'USD', false, false, false],
-            ['ETC', 'USD', false, false, false],
-            ['XRP', 'USD', false, false, false],
-            ['QTUM', 'USD', false, false, false],
+        'coinone' => [ // TODO брать цены за одни запрос
+            ['BTC', 'KRW', false, 'fiat', false],
+            ['BCH', 'KRW', false, 'fiat', false],
+            ['ETH', 'KRW', false, 'fiat', false],
+            ['ETC', 'KRW', false, 'fiat', false],
+            ['XRP', 'KRW', false, 'fiat', false],
+            ['QTUM', 'KRW', false, 'fiat', false],
+            ['IOT', 'KRW', false, 'fiat', false],
         ],
         'binance' => [
             ['BTC', 'USD', false, false, false],
@@ -291,7 +295,7 @@ return [
             ['LTC', 'BTC', false, 'crypto', false],
         ],
         'zaif' => [
-            ['XEM', 'JPY', false, false, false],
+            ['XEM', 'JPY', false, 'fiat', false],
         ],
         'bitconnect' => [
             ['BCC', 'BTC', true, 'crypto', false],
@@ -333,10 +337,14 @@ return [
         ],
         'okex' => [
             ['BTG', 'BTC', false, 'crypto', false],
+            ['IOT', 'BTC', false, 'crypto', false],
         ],
         'coinnest' => [
-            ['BTG', 'KRW', false, false, false],
-            ['NEO', 'KRW', false, false, false],
+            ['BTG', 'KRW', false, 'fiat', false],
+            ['NEO', 'KRW', false, 'fiat', false],
+        ],
+        'coinfalcon' => [
+            ['IOT', 'BTC', false, 'crypto', false],
         ],
         'okcoincn' => [
             ['BCH', 'CNY', false, 'fiat', false],
@@ -345,12 +353,12 @@ return [
             ['LTC', 'CNY', false, 'fiat', false],
         ],
         'btc018' => [
-            ['HSR', 'CNY', false, false, false],
+            ['HSR', 'CNY', false, 'fiat', false],
         ],
         'btc38' => [ // ответы пустые
-            ['XLM', 'CNY', false, false, false],
-            ['BTS', 'CNY', false, false, false],
-            ['XEM', 'CNY', false, false, false],
+            ['XLM', 'CNY', false, 'fiat', false],
+            ['BTS', 'CNY', false, 'fiat', false],
+            ['XEM', 'CNY', false, 'fiat', false],
         ],
     ],
 

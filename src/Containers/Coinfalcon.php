@@ -3,15 +3,13 @@
 namespace Warchiefs\StockExchangeIntegration\Containers;
 
 /**
- * Class Coinone
+ * Class Coinfalcon
  *
  * @package Warchiefs\StockExchangeIntegration\Containers
  */
-class Coinone extends StockExchange
+class Coinfalcon extends StockExchange
 {
-    public $api_uri = 'https://api.coinone.co.kr';
-    protected $fiat = 'KRW';
-    protected $onlyFiat = true;
+    public $api_uri = 'https://coinfalcon.com/api/v1';
 
     public function getAvailableQuotation()
     {
@@ -36,27 +34,20 @@ class Coinone extends StockExchange
     public function getAvailableCoins()
     {
         return [
-            'btc',
-            'bch',
-            'eth',
-            'etc',
-            'xrp',
-            'qtum',
+            'BCC',
         ];
     }
 
     /**
      * @param string $first_currency
      * @param string $second_currency
-     * @return string|array
+     * @return array
      */
-    public function getPairPriceUrl($first_currency = 'BTC', $second_currency = 'USDT')
+    public function getPairPriceUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        $currency = $this->getPair($first_currency, $second_currency);
-
         return [
-            'uri' => "ticker",
-            'params' => compact('currency'),
+            'uri' => 'markets',
+            'params' => [],
         ];
     }
 
@@ -70,34 +61,26 @@ class Coinone extends StockExchange
      */
     public function getPairPriceHandle($response, $first_currency, $second_currency)
     {
+        $symbol = $this->getPair($first_currency, $second_currency);
+
         $response = json_decode($response, true);
 
-        if (!$response || $response['result'] !== 'success' || !isset($response['last'])) {
+        if (!$response || !isset($response['data'])) {
             return null;
         }
 
-        return (float) $response['last'];
+        $prices = array_column($response['data'], 'last_price', 'name');
+
+        if (!isset($prices[$symbol])) {
+            return null;
+        }
+
+        return (float) $prices[$symbol];
     }
 
     public function getChartData($first_currency = 'BTC', $second_currency = 'USD')
     {
         return null;
-    }
-
-    /**
-     * get pair
-     *
-     * @param string $first_currency
-     * @param string $second_currency
-     * @return string
-     */
-    private function getPair($first_currency = 'BTC', $second_currency = 'USD')
-    {
-        if ($first_currency === 'IOT') {
-            $first_currency = 'iota';
-        }
-
-        return strtolower($first_currency);
     }
 
     /**
@@ -109,14 +92,13 @@ class Coinone extends StockExchange
      */
     public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        $currency = $this->getPair($first_currency, $second_currency);
+        $symbol = $this->getPair($first_currency, $second_currency);
 
         return [
-            'uri' => "trades",
-            'params' => compact('currency'),
+            'uri' => "markets/{$symbol}/trades",
+            'params' => [],
         ];
     }
-
 
     /**
      * Get last trade data handle
@@ -124,21 +106,20 @@ class Coinone extends StockExchange
      * @param string $response
      * @param string $first_currency
      * @param string $second_currency
-     * @return float|null
+     * @return array|null
      */
     public function getLastTradeDataHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
-
         $response = json_decode($response, true);
 
-        if (!$response || $response['result'] !== 'success') {
+        if (!$response || !isset($response['data'])) {
             return null;
         }
 
-        $lastTrade = $response['completeOrders'][count($response['completeOrders']) - 1];
+        $lastTrade = $response['data'][0];
 
-        $sum = round($lastTrade['price'] * $lastTrade['qty'], 8);
-        $volume = (float) $lastTrade['qty'];
+        $sum = round($lastTrade['price'] * $lastTrade['size'], 8);
+        $volume = (float) $lastTrade['size'];
         $price = (float) $lastTrade['price'];
 
         return compact('sum', 'volume', 'price');
@@ -153,11 +134,9 @@ class Coinone extends StockExchange
      */
     public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        $currency = $this->getPair($first_currency, $second_currency);
-
         return [
-            'uri' => "ticker",
-            'params' => compact('currency'),
+            'uri' => 'markets',
+            'params' => [],
         ];
     }
 
@@ -171,13 +150,21 @@ class Coinone extends StockExchange
      */
     public function getTotalVolumeHandle($response, $first_currency = 'BTC', $second_currency = 'USD')
     {
+        $symbol = $this->getPair($first_currency, $second_currency);
+
         $response = json_decode($response, true);
 
-        if (!$response || $response['result'] !== 'success') {
+        if (!$response || !isset($response['data'])) {
             return null;
         }
 
-        return (float) $response['volume'];
+        $prices = array_column($response['data'], 'volume', 'name');
+
+        if (!isset($prices[$symbol])) {
+            return null;
+        }
+
+        return (float) $prices[$symbol];
     }
 
     /**
@@ -189,16 +176,18 @@ class Coinone extends StockExchange
      */
     public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        $currency = $this->getPair($first_currency, $second_currency);
+        $symbol = $this->getPair($first_currency, $second_currency);
 
         return [
-            'uri' => "orderbook",
-            'params' => compact('currency'),
+            'uri' => "markets/{$symbol}/orders",
+            'params' => [
+                'level' => 3,
+            ],
         ];
     }
 
     /**
-     * get total demand and offer
+     * get total demand
      *
      * @param string $response
      * @return float|null
@@ -207,20 +196,32 @@ class Coinone extends StockExchange
     {
         $response = json_decode($response, true);
 
-        if (!$response || $response['result'] !== 'success') {
+        if (!$response || !isset($response['data'])) {
             return null;
         }
 
         $totalDemand = 0;
 
-        foreach ($response['ask'] as $ask) {
-            $totalDemand += $ask['price'] * $ask['qty'];
+        foreach ($response['data']['asks'] as $ask) {
+            $totalDemand += $ask['price'] * $ask['size'];
         }
 
-        $offersAmounts = array_column($response['bid'], 'qty');
+        $offersAmounts = array_column($response['data']['bids'], 'size');
 
         $totalOffer = array_sum($offersAmounts);
 
         return compact('totalDemand', 'totalOffer');
+    }
+
+    /**
+     * get pair
+     *
+     * @param string $first_currency
+     * @param string $second_currency
+     * @return string
+     */
+    private function getPair($first_currency = 'BTC', $second_currency = 'USD')
+    {
+        return strtoupper($first_currency . '-' . $second_currency);
     }
 }

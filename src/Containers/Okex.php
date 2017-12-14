@@ -208,6 +208,10 @@ class Okex extends StockExchange
      */
     private function getPair($first_currency = 'BTC', $second_currency = 'USD')
     {
+        if ($first_currency === 'IOT') {
+            $first_currency = 'iota';
+        }
+
         return strtolower($first_currency . '_' . $second_currency);
     }
 }
