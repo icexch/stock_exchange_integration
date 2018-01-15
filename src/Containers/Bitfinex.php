@@ -293,11 +293,11 @@ class Bitfinex extends StockExchange
 
         $totalDemand = 0;
 
-        foreach ($response['asks'] as $ask) {
+        foreach ($response['bids'] as $ask) {
             $totalDemand += $ask['price'] * $ask['amount'];
         }
 
-        $offersAmounts = array_column($response['bids'], 'amount');
+        $offersAmounts = array_column($response['asks'], 'amount');
 
         $totalOffer = array_sum($offersAmounts);
 

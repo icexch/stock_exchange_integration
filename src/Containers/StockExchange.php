@@ -303,6 +303,13 @@ abstract class StockExchange implements Exchange
                                 return;
                             }
 
+                            if ($exchangeName === 'huobi' && $pair[0] === 'BTC') {
+                                $pair[4] = false;
+                            }
+                            if (is_callable($convertCryptoCallback)) {
+                                $volume = $convertCryptoCallback($pair[0], $volume, $pair[4]);
+                            }
+
                             if ($volume) {
                                 self::$buffer[$pair[0]][$exchangeName]['totalVolume'] = $volume;
                             }

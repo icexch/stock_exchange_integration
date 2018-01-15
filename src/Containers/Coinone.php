@@ -213,11 +213,11 @@ class Coinone extends StockExchange
 
         $totalDemand = 0;
 
-        foreach ($response['ask'] as $ask) {
+        foreach ($response['bid'] as $ask) {
             $totalDemand += $ask['price'] * $ask['qty'];
         }
 
-        $offersAmounts = array_column($response['bid'], 'qty');
+        $offersAmounts = array_column($response['ask'], 'qty');
 
         $totalOffer = array_sum($offersAmounts);
 

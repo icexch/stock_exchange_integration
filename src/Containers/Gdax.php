@@ -261,11 +261,11 @@ class Gdax extends StockExchange
 
         $totalDemand = 0;
 
-        foreach ($response['asks'] as $ask) {
+        foreach ($response['bids'] as $ask) {
             $totalDemand += $ask[0] * $ask[1];
         }
 
-        $offersAmounts = array_column($response['bids'], 1);
+        $offersAmounts = array_column($response['asks'], 1);
 
         $totalOffer = array_sum($offersAmounts);
 

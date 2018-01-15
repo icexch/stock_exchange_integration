@@ -188,11 +188,11 @@ class Bitz extends StockExchange
 
         $totalDemand = 0;
 
-        foreach ($response['data']['asks'] as $ask) {
+        foreach ($response['data']['bids'] as $ask) {
             $totalDemand += $ask[0] * $ask[1];
         }
 
-        $offersAmounts = array_column($response['data']['bids'], 1);
+        $offersAmounts = array_column($response['data']['asks'], 1);
 
         $totalOffer = array_sum($offersAmounts);
 

@@ -202,11 +202,11 @@ class Coinfalcon extends StockExchange
 
         $totalDemand = 0;
 
-        foreach ($response['data']['asks'] as $ask) {
+        foreach ($response['data']['bids'] as $ask) {
             $totalDemand += $ask['price'] * $ask['size'];
         }
 
-        $offersAmounts = array_column($response['data']['bids'], 'size');
+        $offersAmounts = array_column($response['data']['asks'], 'size');
 
         $totalOffer = array_sum($offersAmounts);
 

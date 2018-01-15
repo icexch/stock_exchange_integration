@@ -210,11 +210,11 @@ class Bithumb extends StockExchange
 
         $totalDemand = 0;
 
-        foreach ($response['data']['asks'] as $ask) {
+        foreach ($response['data']['bids'] as $ask) {
             $totalDemand += $ask['price'] * $ask['quantity'];
         }
 
-        $offersAmounts = array_column($response['data']['bids'], 'quantity');
+        $offersAmounts = array_column($response['data']['asks'], 'quantity');
 
         $totalOffer = array_sum($offersAmounts);
 

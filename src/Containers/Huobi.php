@@ -220,11 +220,11 @@ class Huobi extends StockExchange
 
         $totalDemand = 0;
 
-        foreach ($response['tick']['asks'] as $ask) {
+        foreach ($response['tick']['bids'] as $ask) {
             $totalDemand += $ask[0] * $ask[1];
         }
 
-        $offersAmounts = array_column($response['tick']['bids'], 1);
+        $offersAmounts = array_column($response['tick']['asks'], 1);
 
         $totalOffer = array_sum($offersAmounts);
 

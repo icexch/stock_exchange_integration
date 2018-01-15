@@ -237,11 +237,11 @@ class Bitflyer extends StockExchange
 
         $totalDemand = 0;
 
-        foreach ($response['asks'] as $ask) {
+        foreach ($response['bids'] as $ask) {
             $totalDemand += $ask['price'] * $ask['size'];
         }
 
-        $offersAmounts = array_column($response['bids'], 'size');
+        $offersAmounts = array_column($response['asks'], 'size');
 
         $totalOffer = array_sum($offersAmounts);
 

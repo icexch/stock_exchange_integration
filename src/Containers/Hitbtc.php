@@ -232,7 +232,7 @@ class Hitbtc extends StockExchange
             return null;
         }
 
-        return (float) $response['volume_quote'];
+        return (float) $response['volume'];
     }
 
     /**
@@ -265,11 +265,11 @@ class Hitbtc extends StockExchange
 
         $totalDemand = 0;
 
-        foreach ($response['asks'] as $ask) {
+        foreach ($response['bids'] as $ask) {
             $totalDemand += $ask[0] * $ask[1];
         }
 
-        $offersAmounts = array_column($response['bids'], 1);
+        $offersAmounts = array_column($response['asks'], 1);
 
         $totalOffer = array_sum($offersAmounts);
 

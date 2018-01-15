@@ -336,11 +336,11 @@ class Kraken extends StockExchange
         foreach ($response['result'] as $item) {
             $totalDemand = 0;
 
-            foreach ($item['asks'] as $ask) {
+            foreach ($item['bids'] as $ask) {
                 $totalDemand += $ask[0] * $ask[1];
             }
 
-            $offersAmounts = array_column($item['bids'], 1);
+            $offersAmounts = array_column($item['asks'], 1);
 
             $totalOffer = array_sum($offersAmounts);
 

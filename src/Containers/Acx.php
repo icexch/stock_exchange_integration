@@ -178,11 +178,11 @@ class Acx extends StockExchange
 
         $totalDemand = 0;
 
-        foreach ($response['asks'] as $ask) {
+        foreach ($response['bids'] as $ask) {
             $totalDemand += $ask['price'] * $ask['volume'];
         }
 
-        $offersAmounts = array_column($response['bids'], 'volume');
+        $offersAmounts = array_column($response['asks'], 'volume');
 
         $totalOffer = array_sum($offersAmounts);
 
