@@ -3,13 +3,14 @@
 namespace Warchiefs\StockExchangeIntegration\Containers;
 
 /**
- * Class Okex
+ * Class Bitbank
  *
  * @package Warchiefs\StockExchangeIntegration\Containers
  */
-class Okex extends StockExchange
+class Bitbank extends StockExchange
 {
-    public $api_uri = 'https://www.okex.com/api/v1';
+    public $api_uri = 'https://public.bitbank.cc';
+    protected $fiat = 'JPY';
 
     public function getAvailableQuotation()
     {
@@ -41,16 +42,13 @@ class Okex extends StockExchange
     /**
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getPairPriceUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        $symbol = $this->getPair($first_currency, $second_currency);
+        $pair = $this->getPair($first_currency, $second_currency);
 
-        return [
-            'uri' => 'ticker.do',
-            'params' => compact('symbol'),
-        ];
+        return "{$pair}/ticker";
     }
 
     /**
@@ -65,11 +63,12 @@ class Okex extends StockExchange
     {
         $response = json_decode($response, true);
 
-        if (!$response || isset($response['error_code'])) {
+
+        if (!$response || ! (bool) $response['success']) {
             return null;
         }
 
-        return (float) $response['ticker']['last'];
+        return (float) $response['data']['last'];
     }
 
     public function getChartData($first_currency = 'BTC', $second_currency = 'USD')
@@ -82,16 +81,13 @@ class Okex extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getLastTradeDataUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        $symbol = $this->getPair($first_currency, $second_currency);
+        $pair = $this->getPair($first_currency, $second_currency);
 
-        return [
-            'uri' => 'trades.do',
-            'params' => compact('symbol'),
-        ];
+        return "{$pair}/transactions";
     }
 
     /**
@@ -106,15 +102,13 @@ class Okex extends StockExchange
     {
         $response = json_decode($response, true);
 
-        if (!$response || isset($response['error_code'])) {
+        if (!$response || ! (bool) $response['success']) {
             return null;
         }
 
-        $lastTrade = $response[count($response) - 1];
-
-        $sum = round($lastTrade['price'] * $lastTrade['amount'], 8);
-        $volume = (float) $lastTrade['amount'];
-        $price = (float) $lastTrade['price'];
+        $price = (float) $response['data']['transactions'][0]['price'];
+        $volume = (float) $response['data']['transactions'][0]['amount'];
+        $sum = round($price * $volume, 8);
 
         return compact('sum', 'volume', 'price');
     }
@@ -124,16 +118,13 @@ class Okex extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getTotalVolumeUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        $symbol = $this->getPair($first_currency, $second_currency);
+        $pair = $this->getPair($first_currency, $second_currency);
 
-        return [
-            'uri' => 'ticker.do',
-            'params' => compact('symbol'),
-        ];
+        return "{$pair}/ticker";
     }
 
     /**
@@ -148,11 +139,11 @@ class Okex extends StockExchange
     {
         $response = json_decode($response, true);
 
-        if (!$response || isset($response['error_code'])) {
+        if (!$response || ! (bool) $response['success']) {
             return null;
         }
 
-        return (float) $response['ticker']['vol'];
+        return (float) $response['data']['vol'];
     }
 
     /**
@@ -160,16 +151,13 @@ class Okex extends StockExchange
      *
      * @param string $first_currency
      * @param string $second_currency
-     * @return array
+     * @return string
      */
     public function getTotalDemandAndOfferUrl($first_currency = 'BTC', $second_currency = 'USD')
     {
-        $symbol = $this->getPair($first_currency, $second_currency);
+        $pair = $this->getPair($first_currency, $second_currency);
 
-        return [
-            'uri' => 'depth.do',
-            'params' => compact('symbol'),
-        ];
+        return "{$pair}/depth";
     }
 
     /**
@@ -182,17 +170,17 @@ class Okex extends StockExchange
     {
         $response = json_decode($response, true);
 
-        if (!$response || isset($response['error_code'])) {
+        if (!$response || ! (bool) $response['success']) {
             return null;
         }
 
         $totalDemand = 0;
 
-        foreach ($response['bids'] as $ask) {
+        foreach ($response['data']['bids'] as $ask) {
             $totalDemand += $ask[0] * $ask[1];
         }
 
-        $offersAmounts = array_column($response['asks'], 1);
+        $offersAmounts = array_column($response['data']['asks'], 1);
 
         $totalOffer = array_sum($offersAmounts);
 
@@ -206,16 +194,8 @@ class Okex extends StockExchange
      * @param string $second_currency
      * @return string
      */
-    private function getPair($first_currency = 'BTC', $second_currency = 'USD')
+    private function getPair($first_currency = 'BTC', $second_currency = 'JPY')
     {
-        if ($first_currency === 'IOT') {
-            $first_currency = 'iota';
-        }
-
-        if ($second_currency === 'USD') {
-            $second_currency = 'USDT';
-        }
-
         return strtolower($first_currency . '_' . $second_currency);
     }
 }

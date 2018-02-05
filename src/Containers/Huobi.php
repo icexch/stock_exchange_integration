@@ -97,14 +97,14 @@ class Huobi extends StockExchange
     private function getPair($first_currency = 'ETH', $second_currency = 'CNY')
     {
         if ($second_currency === 'USD') {
-            $second_currency = 'CNY';
+            $second_currency = 'USDT';
         }
-        if ($first_currency === 'BCH') {
-            $first_currency = 'BCC';
-        }
-        if ($second_currency === 'BCH') {
-            $second_currency = 'BCC';
-        }
+//        if ($first_currency === 'BCH') {
+//            $first_currency = 'BCC';
+//        }
+//        if ($second_currency === 'BCH') {
+//            $second_currency = 'BCC';
+//        }
         $this->api_uri = $second_currency !== 'CNY' ? $this->api_uri2 : $this->api_uri1;
 
         return strtolower($first_currency . $second_currency);

@@ -114,7 +114,7 @@ abstract class StockExchange implements Exchange
                                 if (is_callable($convertCryptoCallback)) {
                                     $price = $convertCryptoCallback($pair[1], $price, $pair[4]);
                                 }
-                            } elseif ($pair[3] === 'fiat' || $container->isFiat()) {
+                            } elseif ($pair[3] === 'fiat' || $container->isOnlyFiat()) {
                                 $fiatCurrency = $container->isFiat() ?? $pair[1];
                                 if (is_callable($convertFiatCallback)) {
                                     $price = $convertFiatCallback($fiatCurrency, $price);
@@ -164,7 +164,7 @@ abstract class StockExchange implements Exchange
                                     if (is_callable($convertCryptoCallback)) {
                                         $price = $convertCryptoCallback($pair[1], $price, $pair[4]);
                                     }
-                                } elseif ($pair[3] === 'fiat' || $container->isFiat()) {
+                                } elseif ($pair[3] === 'fiat' || $container->isOnlyFiat()) {
                                     $fiatCurrency = $container->isFiat() ?? $pair[1];
                                     if (is_callable($convertFiatCallback)) {
                                         $price = $convertFiatCallback($fiatCurrency, $price);
@@ -252,7 +252,7 @@ abstract class StockExchange implements Exchange
                                 if (is_callable($convertCryptoCallback)) {
                                     $price = $convertCryptoCallback($pair[1], $price, $pair[4]);
                                 }
-                            } elseif ($pair[3] === 'fiat' || $container->isFiat()) {
+                            } elseif ($pair[3] === 'fiat' || $container->isOnlyFiat()) {
                                 $fiatCurrency = $container->isFiat() ?? $pair[1];
                                 if (is_callable($convertFiatCallback)) {
                                     $price = $convertFiatCallback($fiatCurrency, $price);
@@ -303,9 +303,6 @@ abstract class StockExchange implements Exchange
                                 return;
                             }
 
-                            if ($exchangeName === 'huobi' && $pair[0] === 'BTC') {
-                                $pair[4] = false;
-                            }
                             if (is_callable($convertCryptoCallback)) {
                                 $volume = $convertCryptoCallback($pair[0], $volume, $pair[4]);
                             }
@@ -362,7 +359,7 @@ abstract class StockExchange implements Exchange
                                 if (is_callable($convertCryptoCallback)) {
                                     $demand = $convertCryptoCallback($pair[1], $demand, $pair[4]);
                                 }
-                            } elseif ($pair[3] === 'fiat' || $container->isFiat()) {
+                            } elseif ($pair[3] === 'fiat' || $container->isOnlyFiat()) {
                                 $fiatCurrency = $container->isFiat() ?? $pair[1];
                                 if (is_callable($convertFiatCallback)) {
                                     $demand = $convertFiatCallback($fiatCurrency, $demand);
