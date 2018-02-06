@@ -183,7 +183,7 @@ class Huobi extends StockExchange
             return null;
         }
 
-        return (float) $response['tick']['vol'];
+        return (float) $response['tick']['amount'];
     }
 
     /**
