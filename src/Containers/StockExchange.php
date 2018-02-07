@@ -261,11 +261,15 @@ abstract class StockExchange implements Exchange
 
                             if ($price) {
                                 $data['price'] = $price;
-                                $data['sum'] = $price * $data['volume'];
+                                $data['sum'] = round($price * $data['volume'], 2);
                             }
 
                             if ($data['price']) {
-                                self::$buffer[$pair[0]][$exchangeName]['lastTradeData'] = $data;
+                                if (config('exchange.new_coins_data_format')) {
+                                    self::$buffer[$exchangeName][$pair[0] . '/' . $pair[1]]['lastTradeData'] = $data;
+                                } else {
+                                    self::$buffer[$pair[0]][$exchangeName]['lastTradeData'] = $data;
+                                }
                             }
                         },
                         null,
@@ -308,7 +312,11 @@ abstract class StockExchange implements Exchange
                             }
 
                             if ($volume) {
-                                self::$buffer[$pair[0]][$exchangeName]['totalVolume'] = $volume;
+                                if (config('exchange.new_coins_data_format')) {
+                                    self::$buffer[$exchangeName][$pair[0] . '/' . $pair[1]]['totalVolume'] = $volume;
+                                } else {
+                                    self::$buffer[$pair[0]][$exchangeName]['totalVolume'] = $volume;
+                                }
                             }
                         },
                         null,
@@ -371,8 +379,13 @@ abstract class StockExchange implements Exchange
                             }
 
                             if ($data['totalDemand']) {
-                                self::$buffer[$pair[0]][$exchangeName]['totalDemandUsd'] = round($data['totalDemand'], 8);
-                                self::$buffer[$pair[0]][$exchangeName]['totalOffer'] = $data['totalOffer'];
+                                if (config('exchange.new_coins_data_format')) {
+                                    self::$buffer[$exchangeName][$pair[0] . '/' . $pair[1]]['totalDemandUsd'] = round($data['totalDemand'], 8);
+                                    self::$buffer[$exchangeName][$pair[0] . '/' . $pair[1]]['totalOffer'] = $data['totalOffer'];
+                                } else {
+                                    self::$buffer[$pair[0]][$exchangeName]['totalDemandUsd'] = round($data['totalDemand'], 8);
+                                    self::$buffer[$pair[0]][$exchangeName]['totalOffer'] = $data['totalOffer'];
+                                }
                             }
                         },
                         null,
